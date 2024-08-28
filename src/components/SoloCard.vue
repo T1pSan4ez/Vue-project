@@ -1,15 +1,140 @@
 <template>
-<div>
+  <div>
+    <v-container class="width-container">
+      <v-row>
+        <v-col cols="4">
+          <h2>{{ movieInfo.title }}</h2>
+          <p>{{ movieInfo.original_title }}</p>
+        </v-col>
+      </v-row>
+      <v-row>
+        <v-col cols="12" md="4">
+          <v-img :src="getPosterUrl(movieInfo.poster_path)"></v-img>
+        </v-col>
+        <v-col cols="12" md="8">
+          <div class="about-movie">
+            <p v-if="movieInfo.vote_average"><strong class="underline">Рейтинг IMDB:</strong><span
+                :class="getRatingClass(movieInfo.vote_average)"> {{ movieInfo.vote_average }}</span>
+              ({{ movieInfo.vote_count }})</p>
+            <p v-if="movieInfo.release_date"><strong class="underline">Дата выхода:</strong> {{ movieInfo.release_date }}</p>
+            <p v-if="productionCountries.length > 0"><strong class="underline">Страна:</strong> {{ getCountryName(productionCountries) }}</p>
+            <p v-if="productionCompanies.length > 0"><strong class="underline">Производство:</strong> {{ getCompaniesName(productionCompanies) }}</p>
+            <p v-if="genresInfo.length > 0"><strong class="underline">Жанр:</strong> {{ getGenresName(genresInfo) }}</p>
+            <p v-if="movieInfo.budget"><strong class="underline">Бюджет:</strong> {{ movieInfo.budget }} $</p>
+            <p v-if="movieInfo.tagline"><strong class="underline">Слоган:</strong> {{ movieInfo.tagline }}</p>
+          </div>
+        </v-col>
+      </v-row>
+    </v-container>
+    <v-container class="width-container">
+      <v-row>
+        <v-col cols="12">
+          <h2>Описание</h2>
+          <p>{{ movieInfo.overview }}</p>
+        </v-col>
+      </v-row>
+    </v-container>
+    <v-container class="width-container">
+      <v-row>
+        <v-col cols="12">
+          <h2>Просмотр видео</h2>
+          <iframe v-if="videos.length > 0" :src="getVideoUrl(videos[videos.length - 1].key)" width="100%" height="500" allowfullscreen></iframe>
+          <p v-else>Видео недоступно</p>
+        </v-col>
+      </v-row>
+    </v-container>
 
-</div>
+  </div>
 </template>
 
 <script>
+import Api from "@/services/api.js";
+import {ratingColor} from "@/mixins/RatingColor.js";
 
+export default {
+  name: "SoloCard",
+  mixins: [ratingColor],
+  props: {
+    id: {
+      type: String,
+      required: true
+    }
+  },
+  data() {
+    return {
+      movieInfo: [],
+      productionCompanies: [],
+      genresInfo: [],
+      belongToCollection: [],
+      productionCountries: [],
+      videos: [],
+    }
+  },
+  methods: {
+    async getInfo() {
+      const response = await Api.getMovieDetails(this.id);
+      this.movieInfo = response;
+      console.log(this.movieInfo);
+
+      this.productionCompanies = response.production_companies;
+
+      this.genresInfo = response.genres;
+
+      this.belongToCollection = response.belongs_to_collection;
+
+      this.productionCountries = response.production_countries;
+    },
+    async getVideos() {
+      const response = await Api.getVideos(this.id);
+      this.videos = response.results;
+    },
+    getVideoUrl(videoKey) {
+      return `https://www.youtube.com/embed/${videoKey}`;
+    },
+    getPosterUrl(posterPath) {
+      return `https://image.tmdb.org/t/p/original/${posterPath}`;
+    },
+    getCountryName(country) {
+      return country.map(country => country.name).join(", ");
+    },
+    getCompaniesName(company) {
+      return company.map(company => company.name).join(", ");
+    },
+    getGenresName(genre) {
+      return genre.map(genre => genre.name).join(", ");
+    },
+  },
+  mounted() {
+    this.getInfo();
+    this.getVideos();
+  },
+}
 </script>
 
-
-
 <style scoped>
+.green-text {
+  color: #3dae65;
+}
 
+.orange-text {
+  color: orange;
+}
+
+.red-text {
+  color: red;
+}
+
+.underline {
+  text-decoration: underline;
+}
+
+.about-movie {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+.width-container {
+  max-width: 1200px;
+}
 </style>
