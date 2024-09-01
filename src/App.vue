@@ -1,96 +1,66 @@
 <template>
-  <div>
-    <v-card>
-      <v-container>
-        <v-row justify="space-between">
+  <v-app class="bg-card">
+    <v-card class="bg-card">
+      <v-container class="bg-container">
+        <v-row class="d-flex align-center justify-space-between">
           <v-col cols="auto">
-            <v-switch label="Светлая тема" inset @click="toggleTheme"></v-switch>
-          </v-col>
-          <v-col cols="auto">
-            <v-tabs
-                v-model="tab"
-                align-tabs="center"
-                color="blue darken-2"
-            >
-              <router-link :to="{name: 'main'}">
+            <v-tabs v-model="tab" align-tabs="center" color="deep-orange" hide-slider>
+              <router-link :to="{ name: 'main' }">
                 <v-tab :value="1">Главная</v-tab>
               </router-link>
             </v-tabs>
           </v-col>
           <v-col cols="auto" v-if="!userStore.user">
-            <v-btn class="color-login" @click="showModal = true">Войти</v-btn>
+            <v-btn class="color-login" @click="toggleModal(true)">Войти</v-btn>
           </v-col>
           <v-col cols="auto" v-if="userStore.user">
-            <v-btn class="color-logout" @click="logout">Выйти</v-btn>
+            <UserMenu />
           </v-col>
         </v-row>
       </v-container>
     </v-card>
-    <ModalForm
-        :isVisible="showModal"
-        @close="showModal = false"
-        :isRegistration="isRegistration"
-        @toggle-mode="toggleMode"
-    >
+    <ModalForm :isVisible="modalState.isVisible" @close="toggleModal(false)" :isRegistration="modalState.isRegistration" @toggle-mode="toggleRegistration">
       <template v-slot:header>
-        <h3>{{ isRegistration ? 'Регистрация' : 'Авторизация' }}</h3>
+        <h3>{{ modalState.isRegistration ? 'Регистрация' : 'Авторизация' }}</h3>
       </template>
       <template v-slot:body>
-        <component :is="isRegistration ? RegistrationForm : LoginForm"/>
+        <component :is="modalState.isRegistration ? RegistrationForm : LoginForm" />
       </template>
     </ModalForm>
-    <RouterView/>
-  </div>
+    <RouterView />
+  </v-app>
 </template>
 
 <script setup>
-import {useTheme} from 'vuetify'
 import {ref, onMounted} from "vue";
 import {useUserStore} from "@/store/UserStore.js";
-import LoginForm from "@/components/auth/LoginForm.vue";
 import ModalForm from "@/components/auth/ModalForm.vue";
+import LoginForm from "@/components/auth/LoginForm.vue";
 import RegistrationForm from "@/components/auth/RegistrationForm.vue";
-import {getAuth, signOut} from "firebase/auth";
+import UserMenu from "@/components/auth/UserMenu.vue";
 
-const showModal = ref(false);
-const isRegistration = ref(false);
 const userStore = useUserStore();
 const tab = ref();
-const theme = useTheme();
-const auth = getAuth();
+const modalState = ref({
+  isVisible: false,
+  isRegistration: false,
+});
 
-const toggleTheme = () => {
-  theme.global.name.value = theme.global.current.value.dark ? 'light' : 'dark';
-}
+const toggleModal = (isVisible) => {
+  modalState.value.isVisible = isVisible;
+};
 
-const toggleMode = () => {
-  isRegistration.value = !isRegistration.value;
-}
-
-const logout = async () => {
-  try {
-    await signOut(auth);
-    userStore.setUser(null);
-    showModal.value = true;
-  } catch (error) {
-    console.error("Ошибка выхода: ", error);
-  }
-}
+const toggleRegistration = () => {
+  modalState.value.isRegistration = !modalState.value.isRegistration;
+};
 
 onMounted(() => {
-  const isUserLoggedIn = userStore.initUser();
-  if (!isUserLoggedIn) {
-    showModal.value = true;
-  }
+  userStore.initUser();
 });
 </script>
 
 <style scoped>
 .color-login {
   background-color: #3dae65;
-}
-
-.color-logout {
-  background-color: #c52b3c;
 }
 </style>

@@ -2,7 +2,7 @@
   <div>
     <v-container class="width-container">
       <v-row>
-        <v-col cols="4">
+        <v-col cols="8">
           <h2>{{ movieInfo.title }}</h2>
           <p>{{ movieInfo.original_title }}</p>
         </v-col>
@@ -16,12 +16,20 @@
             <p v-if="movieInfo.vote_average"><strong class="underline">Рейтинг IMDB:</strong><span
                 :class="getRatingClass(movieInfo.vote_average)"> {{ movieInfo.vote_average }}</span>
               ({{ movieInfo.vote_count }})</p>
-            <p v-if="movieInfo.release_date"><strong class="underline">Дата выхода:</strong> {{ movieInfo.release_date }}</p>
-            <p v-if="productionCountries.length > 0"><strong class="underline">Страна:</strong> {{ getCountryName(productionCountries) }}</p>
-            <p v-if="productionCompanies.length > 0"><strong class="underline">Производство:</strong> {{ getCompaniesName(productionCompanies) }}</p>
+            <p v-if="movieInfo.release_date"><strong class="underline">Дата выхода:</strong> {{
+                movieInfo.release_date
+              }}</p>
+            <p v-if="productionCountries.length > 0"><strong class="underline">Страна:</strong>
+              {{ getCountryName(productionCountries) }}</p>
+            <p v-if="productionCompanies.length > 0"><strong class="underline">Производство:</strong>
+              {{ getCompaniesName(productionCompanies) }}</p>
             <p v-if="genresInfo.length > 0"><strong class="underline">Жанр:</strong> {{ getGenresName(genresInfo) }}</p>
             <p v-if="movieInfo.budget"><strong class="underline">Бюджет:</strong> {{ movieInfo.budget }} $</p>
             <p v-if="movieInfo.tagline"><strong class="underline">Слоган:</strong> {{ movieInfo.tagline }}</p>
+          </div>
+          <div class="button-container">
+            <v-btn v-if="isUserLoggedIn && !isFavorite" color="primary" @click="addToFavorites('favorites', { userId: user.uid, movieId: movieInfo.id, title: movieInfo.title })">Добавить в избранное</v-btn>
+            <v-btn v-if="isUserLoggedIn && isFavorite" color="primary" disabled>В избранном</v-btn>
           </div>
         </v-col>
       </v-row>
@@ -38,22 +46,37 @@
       <v-row>
         <v-col cols="12">
           <h2>Просмотр видео</h2>
-          <iframe v-if="videos.length > 0" :src="getVideoUrl(videos[videos.length - 1].key)" width="100%" height="500" allowfullscreen></iframe>
+          <iframe v-if="videos.length > 0" :src="getVideoUrl(videos[videos.length - 1].key)" width="100%" height="500"
+                  allowfullscreen></iframe>
           <p v-else>Видео недоступно</p>
         </v-col>
       </v-row>
-    </v-container>
 
+      <v-container class="width-container">
+        <RatingComponent v-if="movieInfo.id" :movieId="movieInfo.id"/>
+      </v-container>
+
+    </v-container>
+    <v-container class="width-container">
+      <CommentsComponent v-if="movieInfo.id" :movieId="movieInfo.id"/>
+    </v-container>
   </div>
 </template>
 
 <script>
 import Api from "@/services/api.js";
-import {ratingColor} from "@/mixins/RatingColor.js";
+import { RatingMixin } from "@/mixins/RatingMixin.js";
+import { FavoriteMixin } from "@/mixins/FavoriteMixin.js";
+import CommentsComponent from "@/components/CommentsComponent.vue";
+import RatingComponent from "@/components/RatingComponent.vue";
 
 export default {
   name: "SoloCard",
-  mixins: [ratingColor],
+  components: {
+    CommentsComponent,
+    RatingComponent
+  },
+  mixins: [RatingMixin, FavoriteMixin],
   props: {
     id: {
       type: String,
@@ -70,19 +93,23 @@ export default {
       videos: [],
     }
   },
+  computed: {
+    isUserLoggedIn() {
+      return !!this.user;
+    }
+  },
   methods: {
     async getInfo() {
       const response = await Api.getMovieDetails(this.id);
       this.movieInfo = response;
-      console.log(this.movieInfo);
-
       this.productionCompanies = response.production_companies;
-
       this.genresInfo = response.genres;
-
       this.belongToCollection = response.belongs_to_collection;
-
       this.productionCountries = response.production_countries;
+
+      if (this.user) {
+        await this.checkIfFavorite('favorites', 'movieId', this.movieInfo.id);
+      }
     },
     async getVideos() {
       const response = await Api.getVideos(this.id);
@@ -107,6 +134,7 @@ export default {
   mounted() {
     this.getInfo();
     this.getVideos();
+    this.user = this.userStore.user;
   },
 }
 </script>
@@ -136,5 +164,9 @@ export default {
 
 .width-container {
   max-width: 1200px;
+}
+
+.button-container {
+  margin-top: 25px;
 }
 </style>

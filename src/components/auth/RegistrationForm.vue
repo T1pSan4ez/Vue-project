@@ -1,96 +1,52 @@
 <template>
   <div>
     <form @submit.prevent="register">
-      <v-text-field
-          v-model="user.email"
-          label="E-mail регистрация"
-      ></v-text-field>
-      <v-text-field
-          v-model="user.password"
-          label="Пароль"
-          type="password"
-      ></v-text-field>
-      <v-alert
-          class="mb-3"
-          v-if="registerAlert"
-          :title="'Успешно:'"
-          :text="registerAlert"
-          color="success"
-          icon="$success"
-          variant="outlined"
-      ></v-alert>
-      <v-alert
-          class="mb-3"
-          v-if="registrationError"
-          :title="'Ошибка регистрации:'"
-          :text="registrationError"
-          type="error"
-          variant="outlined"
-      ></v-alert>
-      <v-btn
-          class="me-4 "
-          type="submit"
-      >
-        Зарегистрироваться
-      </v-btn>
+      <v-text-field v-model="user.nickname" label="Никнейм"></v-text-field>
+      <v-text-field v-model="user.email" label="E-mail регистрация"></v-text-field>
+      <v-text-field v-model="user.password" label="Пароль" type="password"></v-text-field>
+      <v-alert v-if="registerAlert" color="success" icon="$success" variant="outlined" class="mb-3">{{ registerAlert }}</v-alert>
+      <v-alert v-if="registrationError" type="error" variant="outlined" class="mb-3">{{ registrationError }}</v-alert>
+      <v-btn class="me-4" type="submit">Зарегистрироваться</v-btn>
     </form>
-
-
-
   </div>
 </template>
 
-
 <script>
-import {auth} from "@/main.js";
-import {createUserWithEmailAndPassword} from "firebase/auth"
-import {useUserStore} from "@/store/UserStore.js";
+import { AuthService } from "@/services/AuthService.js";
 import router from "@/router/index.js";
 
 export default {
+  name: "RegisterForm",
   data() {
     return {
       user: {
         email: '',
-        password: ''
+        password: '',
+        nickname: ''
       },
       registerAlert: null,
-      registrationError: null
-    }
+      registrationError: null,
+    };
   },
   methods: {
     async register() {
       try {
-        const response = await createUserWithEmailAndPassword(auth, this.user.email, this.user.password);
-        const user = response.user;
-        const store = useUserStore();
-        store.setUser(user);
-
+        await AuthService.register(this.user.email, this.user.password, this.user.nickname);
         this.registerAlert = 'Аккаунт создан!';
-
         await router.push({name: 'home'});
         window.location.reload();
-
-        console.log(user);
       } catch (error) {
         console.error('Ошибка регистрации:', error);
-        this.registrationError = 'Ошибка сервера или такой пользователь уже есть! Попробуйте снова!';
+        this.registrationError = 'Неправильные данные или такой пользователь уже есть! Попробуйте снова!';
       }
     },
     clearError() {
       this.registrationError = null;
-    }
+    },
   },
   watch: {
-    'user.email': function () {
-      this.clearError();
-    }
-  }
-}
-
+    'user.email': 'clearError',
+    'user.nickname': 'clearError',
+  },
+};
 </script>
-
-
-<style scoped>
-
-</style>

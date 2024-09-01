@@ -1,8 +1,12 @@
-import { createMemoryHistory, createRouter } from 'vue-router'
+import { createWebHistory, createRouter } from 'vue-router';
+import { useUserStore } from '@/store/UserStore.js';
 
 import CardsComponent from "@/components/CardsComponent.vue";
 import SoloCard from "@/components/SoloCard.vue";
 import SoloTv from "@/components/SoloTv.vue";
+import FavoriteComponent from "@/components/FavouriteComponent.vue";
+import UserComponent from "@/components/auth/UserComponent.vue";
+import NotFound from "@/components/NotFound.vue";
 
 const routes = [
     {
@@ -22,16 +26,49 @@ const routes = [
         props: true
     },
     {
-        path: '/tv/:id',
+        path: '/tvSerial/:id',
         name: 'tv-card',
         component: SoloTv,
         props: true
     },
-]
+    {
+        path: '/favorite',
+        name: 'favorite',
+        component: FavoriteComponent,
+        meta: { requiresAuth: true }
+    },
+    {
+        path: '/user-office',
+        name: 'user',
+        component: UserComponent,
+        meta: { requiresAuth: true }
+    },
+    {
+        path: '/not-found',
+        name: 'NotFound',
+        component: NotFound,
+    },
+    {
+        path: '/:catchAll(.*)',
+        redirect: { name: 'NotFound' },
+    },
+];
 
 const router = createRouter({
-    history: createMemoryHistory(),
+    history: createWebHistory(),
     routes,
-})
+});
 
-export default router
+router.beforeEach((to, from, next) => {
+    const userStore = useUserStore();
+    const isAuthenticated = !!userStore.user;
+
+    if (to.matched.some(record => record.meta.requiresAuth) && !isAuthenticated) {
+        console.warn(`Неавторизованный доступ к защищенному маршруту: ${to.fullPath}`);
+        next({ name: 'NotFound' });
+    } else {
+        next();
+    }
+});
+
+export default router;

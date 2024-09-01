@@ -26,6 +26,10 @@
             <p v-if="tvInfo.budget"><strong class="underline">Бюджет:</strong> {{ tvInfo.budget }} $</p>
             <p v-if="tvInfo.tagline"><strong class="underline">Слоган:</strong> {{ tvInfo.tagline }}</p>
           </div>
+          <div class="button-container">
+            <v-btn v-if="isUserLoggedIn && !isFavorite" color="primary" @click="handleAddToFavorites">Добавить в избранное</v-btn>
+            <v-btn v-if="isUserLoggedIn && isFavorite" color="primary" disabled>В избранном</v-btn>
+          </div>
         </v-col>
       </v-row>
     </v-container>
@@ -114,21 +118,32 @@
         </v-col>
       </v-row>
     </v-container>
-
+    <v-container class="width-container">
+      <RatingComponent v-if="tvInfo.id" :movieId="tvInfo.id"/>
+    </v-container>
+    <v-container class="width-container">
+      <CommentsComponent v-if="tvInfo.id" :movieId="tvInfo.id"/>
+    </v-container>
   </div>
 </template>
 
 <script>
 import Api from "@/services/api.js";
-import {ratingColor} from "@/mixins/RatingColor.js";
+import { RatingMixin } from "@/mixins/RatingMixin.js";
+import { FavoriteMixin } from "@/mixins/FavoriteMixin.js";
 
-import {Navigation} from 'swiper/modules';
+import { Navigation } from 'swiper/modules';
 import 'swiper/css';
-
+import CommentsComponent from "@/components/CommentsComponent.vue";
+import RatingComponent from "@/components/RatingComponent.vue";
 
 export default {
   name: "SoloTv",
-  mixins: [ratingColor],
+  components: {
+    RatingComponent,
+    CommentsComponent
+  },
+  mixins: [RatingMixin, FavoriteMixin],
   props: {
     id: {
       type: String,
@@ -146,6 +161,11 @@ export default {
       model: null,
     }
   },
+  computed: {
+    isUserLoggedIn() {
+      return !!this.user;
+    }
+  },
   methods: {
     async getInfo() {
       const response = await Api.getTvShowDetails(this.id);
@@ -155,6 +175,13 @@ export default {
       this.productionCompanies = response.production_companies;
       this.productionCountries = response.production_countries;
       this.seasons = response.seasons;
+
+      if (this.user) {
+        await this.checkIfFavorite('tvFavorites', 'tvShowId', this.tvInfo.id); // Check if the TV show is in favorites
+      }
+    },
+    async handleAddToFavorites() {
+      await this.addToFavorites('tvFavorites', { userId: this.user.uid, tvShowId: this.tvInfo.id, title: this.tvInfo.name });
     },
     getPosterUrl(posterPath) {
       return `https://image.tmdb.org/t/p/original/${posterPath}`;
@@ -173,17 +200,14 @@ export default {
     const onSwiper = (swiper) => {
       console.log(swiper);
     };
-    const onSlideChange = () => {
-      console.log('slide change');
-    };
     return {
       onSwiper,
-      onSlideChange,
       modules: [Navigation],
     };
   },
   mounted() {
     this.getInfo();
+    this.user = this.userStore.user;
   },
 }
 </script>
@@ -219,5 +243,9 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
+}
+
+.button-container {
+  margin-top: 25px;
 }
 </style>
