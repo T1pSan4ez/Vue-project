@@ -21,7 +21,7 @@ export const FavoriteMixin = {
 
             const favoritesQuery = query(
                 collection(db, collectionName),
-                where('userId', '==', this.user.uid),
+                where('user_id', '==', this.user.uid),
                 where(field, '==', id)
             );
 

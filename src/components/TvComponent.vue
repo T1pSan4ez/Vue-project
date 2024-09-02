@@ -15,7 +15,7 @@
         <span>Рейтинг: </span><span :class="getRatingClass(card.vote_average)">{{ card.vote_average }}</span>
       </v-card-subtitle>
       <div class="button-container">
-        <v-btn v-if="isUserLoggedIn && !isFavorite" color="primary" @click="addToFavorites('tvFavorites', { userId: user.uid, tvShowId: card.id, title: card.name })">Добавить в избранное</v-btn>
+        <v-btn v-if="isUserLoggedIn && !isFavorite" color="primary" @click="addToFavorites('tv_favorites', { user_id: user.uid, tv_show_id: card.id, title: card.name })">Добавить в избранное</v-btn>
         <v-btn v-if="isUserLoggedIn && isFavorite" color="primary" disabled>В избранном</v-btn>
       </div>
     </v-card>
@@ -37,7 +37,7 @@ export default {
   mixins: [FavoriteMixin, RatingMixin],
   computed: {
     isUserLoggedIn() {
-      return !!this.user; // Возвращает true, если пользователь авторизован
+      return !!this.user;
     },
   },
   methods: {
@@ -47,7 +47,7 @@ export default {
   },
   mounted() {
     if (this.user) {
-      this.checkIfFavorite('tvFavorites', 'tvShowId', this.card.id);
+      this.checkIfFavorite('tv_favorites', 'tv_show_id', this.card.id);
     }
   },
 };

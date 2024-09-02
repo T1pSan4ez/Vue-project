@@ -39,34 +39,31 @@
 </template>
 
 <script>
+import { FilterStore } from '@/store/FilterStore';
+import FirestoreService from '@/services/FirestoreService';
+
 export default {
   name: "FilterComponent",
   data() {
     return {
-      genres: [
-        { id: 28, name: 'Боевик' },
-        { id: 12, name: 'Приключения' },
-        { id: 35, name: 'Комедия' },
-        { id: 80, name: 'Криминал' },
-        { id: 99, name: 'Документальный' },
-        { id: 18, name: 'Драма' },
-        { id: 10751, name: 'Семейный' },
-        { id: 14, name: 'Фэнтези' },
-        { id: 36, name: 'История' },
-        { id: 27, name: 'Ужасы' },
-        { id: 10402, name: 'Музыка' },
-        { id: 9648, name: 'Мистика' },
-        { id: 10749, name: 'Романтика' },
-        { id: 878, name: 'Научная фантастика' },
-        { id: 53, name: 'Триллер' },
-        { id: 10752, name: 'Военный' },
-        { id: 37, name: 'Вестерн' },
-      ],
-      sortOrder: 'Без сортировки',
-      selectedGenres: []
+      genres: [],
     };
   },
   computed: {
+    filterStore() {
+      return FilterStore();
+    },
+    selectedGenres() {
+      return this.filterStore.selectedGenres;
+    },
+    sortOrder: {
+      get() {
+        return this.filterStore.sortOrder;
+      },
+      set(value) {
+        this.filterStore.setSortOrder(value);
+      },
+    },
     selectedGenreNames() {
       return this.selectedGenres.map(id => {
         const genre = this.genres.find(genre => genre.id === id);
@@ -75,17 +72,23 @@ export default {
     }
   },
   methods: {
+    async loadGenres() {
+      this.genres = await FirestoreService.getGenres();
+    },
     toggleGenre(id) {
       const index = this.selectedGenres.indexOf(id);
       if (index === -1) {
-        this.selectedGenres.push(id);
+        this.filterStore.setSelectedGenres([...this.selectedGenres, id]);
       } else {
-        this.selectedGenres.splice(index, 1);
+        this.filterStore.setSelectedGenres(this.selectedGenres.filter(genreId => genreId !== id));
       }
     },
     applyFilter() {
-      this.$emit('filter-applied', {sortOrder: this.sortOrder, selectedGenres: this.selectedGenres});
+      this.$emit('filter-applied', { sortOrder: this.sortOrder, selectedGenres: this.selectedGenres });
     }
+  },
+  mounted() {
+    this.loadGenres();
   }
 }
 </script>

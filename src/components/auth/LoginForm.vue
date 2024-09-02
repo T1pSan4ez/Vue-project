@@ -31,7 +31,7 @@ export default {
       try {
         await AuthService.login(this.user.email, this.user.password);
         this.loginAlert = 'Добро пожаловать!';
-        await router.push({ name: 'home' });
+        //await router.push({ name: 'home' });
         window.location.reload();
       } catch (error) {
         console.error('Ошибка входа:', error);

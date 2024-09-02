@@ -10,13 +10,14 @@
           </v-tabs>
         </v-col>
         <v-col>
-          <v-text-field v-instruction="'Для поиска сериалов, выберите категорию слева!'"  v-model="searchQuery" label="Поиск по названию:" @input="searchFilms" append-inner-icon="mdi-magnify"></v-text-field>
+          <v-text-field v-instruction="'Для поиска сериалов, выберите категорию слева!'" v-model="searchQuery"
+                        label="Поиск по названию:" @input="searchFilms" append-inner-icon="mdi-magnify"></v-text-field>
         </v-col>
       </v-row>
       <v-btn @click="showFilters = !showFilters">Фильтры</v-btn>
       <v-slide-y-transition>
         <div v-show="showFilters">
-          <FilterComponent @filter-applied="handleFilterApplied" />
+          <FilterComponent @filter-applied="handleFilterApplied"/>
         </div>
       </v-slide-y-transition>
     </v-container>
@@ -28,7 +29,7 @@
       </v-row>
       <v-row v-else>
         <v-col v-for="card in cards" :key="card.id" cols="12" sm="12" md="6" lg="3">
-          <component :is="currentFilter === 'tvShows' ? 'TvComponent' : 'PopularComponent'" :card="card" />
+          <component :is="currentFilter === 'tvShows' ? 'TvComponent' : 'PopularComponent'" :card="card"/>
         </v-col>
       </v-row>
       <v-row>
@@ -45,6 +46,7 @@ import PopularComponent from "@/components/PopularComponent.vue";
 import TvComponent from "@/components/TvComponent.vue";
 import ApiService from "@/services/api.js";
 import FilterComponent from "@/components/FilterComponent.vue";
+import { FilterStore } from "@/store/FilterStore.js";
 
 export default {
   name: "CardsComponent",
@@ -63,9 +65,18 @@ export default {
       searchQuery: "",
       currentFilter: '',
       showFilters: false,
-      sortOrder: '',
-      selectedGenres: [],
     };
+  },
+  computed: {
+    filterStore() {
+      return FilterStore();
+    },
+    sortOrder() {
+      return this.filterStore.sortOrder === 'По убыванию' ? 'desc' : this.filterStore.sortOrder === 'По возрастанию' ? 'asc' : '';
+    },
+    selectedGenres() {
+      return this.filterStore.selectedGenres;
+    },
   },
   methods: {
     async getPopular() {
@@ -109,20 +120,21 @@ export default {
       }
     },
     handleFilterApplied(filterData) {
-      this.sortOrder = filterData.sortOrder === 'По убыванию' ? 'desc' : filterData.sortOrder === 'По возрастанию' ? 'asc' : '';
-      this.selectedGenres = filterData.selectedGenres;
+      this.filterStore.setSortOrder(filterData.sortOrder);
+      this.filterStore.setSelectedGenres(filterData.selectedGenres);
       this.page = 1;
       this.getFilms();
     },
     handlePageChange() {
       this.getFilms();
-
     },
     async searchByName() {
       let type = this.currentFilter === 'tvShows' ? 'tv' : 'movie';
       return await ApiService.searchByName(this.searchQuery, type, this.page);
     },
     filterCategory(filter) {
+      this.filterStore.resetFilters();
+
       this.page = 1;
       this.currentFilter = filter;
       this.searchQuery = "";
@@ -133,6 +145,7 @@ export default {
       this.getFilms();
     },
     updatePagination(totalPages) {
+      window.scrollTo(0, 0);
       this.totalPages = Math.min(totalPages, this.maxPages);
     },
   },

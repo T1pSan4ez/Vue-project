@@ -16,7 +16,7 @@
         <span :class="getRatingClass(card.vote_average)">{{ formatRating(card.vote_average) }}</span>
       </v-card-subtitle>
       <div class="button-container">
-        <v-btn v-if="isUserLoggedIn && !isFavorite" color="primary" @click="addToFavorites('favorites', { userId: user.uid, movieId: card.id, title: card.title })">Добавить в избранное</v-btn>
+        <v-btn v-if="isUserLoggedIn && !isFavorite" color="primary" @click="addToFavorites('favorites', { user_id: user.uid, movie_id: card.id, title: card.title })">Добавить в избранное</v-btn>
         <v-btn v-if="isUserLoggedIn && isFavorite" color="primary" disabled>В избранном</v-btn>
       </div>
     </v-card>
@@ -48,7 +48,7 @@ export default {
   },
   mounted() {
     if (this.user) {
-      this.checkIfFavorite('favorites', 'movieId', this.card.id);
+      this.checkIfFavorite('favorites', 'movie_id', this.card.id);
     }
   },
 };

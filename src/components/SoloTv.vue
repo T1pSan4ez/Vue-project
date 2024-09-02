@@ -132,7 +132,6 @@ import Api from "@/services/api.js";
 import { RatingMixin } from "@/mixins/RatingMixin.js";
 import { FavoriteMixin } from "@/mixins/FavoriteMixin.js";
 
-import { Navigation } from 'swiper/modules';
 import 'swiper/css';
 import CommentsComponent from "@/components/CommentsComponent.vue";
 import RatingComponent from "@/components/RatingComponent.vue";
@@ -177,11 +176,11 @@ export default {
       this.seasons = response.seasons;
 
       if (this.user) {
-        await this.checkIfFavorite('tvFavorites', 'tvShowId', this.tvInfo.id); // Check if the TV show is in favorites
+        await this.checkIfFavorite('tv_favorites', 'tv_show_id', this.tvInfo.id);
       }
     },
     async handleAddToFavorites() {
-      await this.addToFavorites('tvFavorites', { userId: this.user.uid, tvShowId: this.tvInfo.id, title: this.tvInfo.name });
+      await this.addToFavorites('tv_favorites', { user_id: this.user.uid, tv_show_id: this.tvInfo.id, title: this.tvInfo.name });
     },
     getPosterUrl(posterPath) {
       return `https://image.tmdb.org/t/p/original/${posterPath}`;
@@ -195,15 +194,6 @@ export default {
     getGenresName(genre) {
       return genre.map(genre => genre.name).join(", ");
     },
-  },
-  setup() {
-    const onSwiper = (swiper) => {
-      console.log(swiper);
-    };
-    return {
-      onSwiper,
-      modules: [Navigation],
-    };
   },
   mounted() {
     this.getInfo();

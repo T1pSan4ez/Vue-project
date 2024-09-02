@@ -125,25 +125,25 @@ export default {
 
       const favoritesQuery = query(
           collection(db, 'favorites'),
-          where('userId', '==', this.user.uid)
+          where('user_id', '==', this.user.uid)
       );
 
       onSnapshot(favoritesQuery, async (snapshot) => {
         this.favoriteMovies = [];
 
-        const movieIds = snapshot.docs.map((doc) => doc.data().movieId);
+        const movieIds = snapshot.docs.map((doc) => doc.data().movie_id);
         await this.fetchFavorites(movieIds, 'movie');
       });
 
       const tvFavoritesQuery = query(
-          collection(db, 'tvFavorites'),
-          where('userId', '==', this.user.uid)
+          collection(db, 'tv_favorites'),
+          where('user_id', '==', this.user.uid)
       );
 
       onSnapshot(tvFavoritesQuery, async (snapshot) => {
         this.favoriteTvShows = [];
 
-        const tvShowIds = snapshot.docs.map((doc) => doc.data().tvShowId);
+        const tvShowIds = snapshot.docs.map((doc) => doc.data().tv_show_id);
         await this.fetchFavorites(tvShowIds, 'tv');
       });
     },
@@ -182,8 +182,8 @@ export default {
     },
     async removeFromFavorites(id, type) {
       try {
-        const collectionName = type === 'movie' ? 'favorites' : 'tvFavorites';
-        const fieldName = type === 'movie' ? 'movieId' : 'tvShowId';
+        const collectionName = type === 'movie' ? 'favorites' : 'tv_favorites';
+        const fieldName = type === 'movie' ? 'movie_id' : 'tv_show_id';
 
         const docToDeleteQuery = query(
             collection(db, collectionName),

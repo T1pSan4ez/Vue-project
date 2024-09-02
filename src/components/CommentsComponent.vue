@@ -36,7 +36,7 @@
 
                 <v-list-item-action>
                   <button
-                      v-if="isUserAuthenticated && comment.userId === user?.uid"
+                      v-if="isUserAuthenticated && comment.user_id === user.uid"
                       @click="deleteComment(comment.id)"
                       class="btn-delete"
                   >
@@ -83,8 +83,8 @@ export default {
       if (this.newComment.trim()) {
         await FirestoreService.addDocument('comments', {
           text: this.newComment,
-          userId: this.user.uid,
-          movieId: this.movieId,
+          user_id: this.user.uid,
+          movie_id: this.movieId,
           timestamp: new Date(),
         });
         this.newComment = '';
@@ -92,7 +92,7 @@ export default {
     },
     async deleteComment(id) {
       const comment = this.comments.find((c) => c.id === id);
-      if (comment.userId === this.user.uid) {
+      if (comment.user_id === this.user.uid) {
         await FirestoreService.deleteDocument('comments', id);
       } else {
         alert('Вы не можете удалить этот комментарий.');
@@ -117,12 +117,12 @@ export default {
 
       FirestoreService.onCollectionSnapshot(
           'comments',
-          [where('movieId', '==', this.movieId), orderBy('timestamp', 'desc')],
+          [where('movie_id', '==', this.movieId), orderBy('timestamp', 'desc')],
           async (snapshot) => {
             this.comments = await Promise.all(
                 snapshot.docs.map(async (doc) => {
                   const data = doc.data();
-                  const nickname = await this.fetchUserNickname(data.userId);
+                  const nickname = await this.fetchUserNickname(data.user_id);
                   return {
                     id: doc.id,
                     nickname,

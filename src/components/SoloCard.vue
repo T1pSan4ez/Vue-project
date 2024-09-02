@@ -28,7 +28,7 @@
             <p v-if="movieInfo.tagline"><strong class="underline">Слоган:</strong> {{ movieInfo.tagline }}</p>
           </div>
           <div class="button-container">
-            <v-btn v-if="isUserLoggedIn && !isFavorite" color="primary" @click="addToFavorites('favorites', { userId: user.uid, movieId: movieInfo.id, title: movieInfo.title })">Добавить в избранное</v-btn>
+            <v-btn v-if="isUserLoggedIn && !isFavorite" color="primary" @click="addToFavorites('favorites', { user_id: user.uid, movie_id: movieInfo.id, title: movieInfo.title })">Добавить в избранное</v-btn>
             <v-btn v-if="isUserLoggedIn && isFavorite" color="primary" disabled>В избранном</v-btn>
           </div>
         </v-col>
@@ -108,7 +108,7 @@ export default {
       this.productionCountries = response.production_countries;
 
       if (this.user) {
-        await this.checkIfFavorite('favorites', 'movieId', this.movieInfo.id);
+        await this.checkIfFavorite('favorites', 'movie_id', this.movieInfo.id);
       }
     },
     async getVideos() {

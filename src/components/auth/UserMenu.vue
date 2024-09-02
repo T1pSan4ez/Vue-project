@@ -66,6 +66,7 @@ export default {
         await signOut(this.auth);
         this.userStore.clearUser();
         this.$router.push({ name: 'main' });
+        window.location.reload();
       } catch (error) {
         console.error("Ошибка выхода: ", error);
       }

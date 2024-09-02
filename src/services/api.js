@@ -8,7 +8,7 @@ const axiosInstance = axios.create({
 
 const API_KEY = import.meta.env.VITE_API_KEY ?? '0099006263f714dc2164a25ebd2cbce3';
 const LANGUAGE = 'ru-RU';
-const VOTE_COUNT = 100;
+const VOTE_COUNT = 200;
 const WITHOUT_MULT = '16';
 
 class ApiService {

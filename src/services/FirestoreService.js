@@ -26,6 +26,23 @@ class FirestoreService {
         const q = query(collection(db, collectionName), ...constraints);
         return onSnapshot(q, callback);
     }
+
+    async getGenres() {
+        try {
+            const docRef = doc(db, 'config', '7EHRc92wX1ww8XH37ZWQ');
+            const docSnap = await getDoc(docRef);
+
+            if (docSnap.exists()) {
+                return docSnap.data().genre;
+            } else {
+                console.error('Документ genres не найден');
+                return [];
+            }
+        } catch (error) {
+            console.error('Ошибка при получении жанров:', error);
+            return [];
+        }
+    }
 }
 
 export default new FirestoreService();

@@ -63,8 +63,8 @@ export default {
       const userId = this.user.uid;
 
       await FirestoreService.setDocument('ratings', `${this.movieId}_${userId}`, {
-        userId: userId,
-        movieId: this.movieId,
+        user_id: userId,
+        movie_id: this.movieId,
         rating: rating
       });
 
@@ -72,7 +72,7 @@ export default {
       this.getAverageRating();
     },
     getAverageRating() {
-      FirestoreService.onCollectionSnapshot('ratings', [where('movieId', '==', this.movieId)], (snapshot) => {
+      FirestoreService.onCollectionSnapshot('ratings', [where('movie_id', '==', this.movieId)], (snapshot) => {
         let total = 0;
         let count = snapshot.size;
 
