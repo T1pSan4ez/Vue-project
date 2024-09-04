@@ -8,6 +8,7 @@
               <router-link :to="{ name: 'main' }">
                 <v-tab :value="1">Главная</v-tab>
               </router-link>
+                <ThemeSelector />
             </v-tabs>
           </v-col>
           <v-col cols="auto" v-if="!userStore.user">
@@ -38,6 +39,7 @@ import ModalForm from "@/components/auth/ModalForm.vue";
 import LoginForm from "@/components/auth/LoginForm.vue";
 import RegistrationForm from "@/components/auth/RegistrationForm.vue";
 import UserMenu from "@/components/auth/UserMenu.vue";
+import ThemeSelector from "@/components/ThemeSelector.vue";
 
 const userStore = useUserStore();
 const tab = ref();

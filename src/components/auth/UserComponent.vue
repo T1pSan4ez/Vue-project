@@ -8,11 +8,24 @@
           <v-alert v-if="errorMessage" type="error" dismissible @click:close="errorMessage = ''" class="mb-5">{{ errorMessage }}</v-alert>
 
           <v-form>
+            <div class="avatar-container">
+              <v-avatar size="180">
+                <img :src="avatarUrl || 'https://cdn.vuetifyjs.com/images/profiles/1.png'"
+                     alt="User Avatar"
+                     class="avatar-image"
+                />
+              </v-avatar>
+              <v-file-input
+                  label="Загрузить аватар"
+                  @change="handleAvatarUpload"
+                  accept="image/*"
+              ></v-file-input>
+            </div>
             <v-text-field v-model="nickname" label="Nickname" />
             <v-btn class="mb-5" @click.prevent="updateNickname">Изменить имя</v-btn>
             <v-text-field v-model="email" label="Почта" :disabled="true"></v-text-field>
-            <v-text-field v-model="currentPassword" label="Current Password" type="password" :rules="[rules.required]"></v-text-field>
-            <v-text-field v-model="newPassword" label="New Password" type="password" :rules="[rules.required]"></v-text-field>
+            <v-text-field v-model="currentPassword" label="Текущий пароль" type="password" :rules="[rules.required]"></v-text-field>
+            <v-text-field v-model="newPassword" label="Новый пароль" type="password" :rules="[rules.required]"></v-text-field>
             <v-btn @click.prevent="changePassword">Сменить пароль</v-btn>
           </v-form>
         </v-card-text>
@@ -22,8 +35,9 @@
 </template>
 
 <script>
-import { AuthService } from '@/services/AuthService.js';
-import { auth } from '@/main.js';
+import {AuthService} from '@/services/AuthService.js';
+import {auth} from '@/main.js';
+import { onAuthStateChanged } from 'firebase/auth';
 
 export default {
   name: 'UserComponent',
@@ -35,18 +49,23 @@ export default {
       newPassword: '',
       successMessage: '',
       errorMessage: '',
+      avatarUrl: '',
       rules: {
         required: (value) => !!value || 'Required.',
       },
     };
   },
   async created() {
-    const user = auth.currentUser;
-    if (user) {
-      this.email = user.email;
-      const userProfile = await AuthService.getUserProfile(user.uid);
-      if (userProfile) this.nickname = userProfile.nickname;
-    }
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        this.email = user.email;
+        const userProfile = await AuthService.getUserProfile(user.uid);
+        if (userProfile) {
+          this.nickname = userProfile.nickname;
+          this.avatarUrl = userProfile.avatar_url || '';
+        }
+      }
+    });
   },
   methods: {
     async updateNickname() {
@@ -72,6 +91,22 @@ export default {
         this.successMessage = '';
       }
     },
+    async handleAvatarUpload(event) {
+      const file = event.target.files[0];
+      if (!file) {
+        return;
+      }
+      try {
+        const user = auth.currentUser;
+        this.avatarUrl = await AuthService.uploadAvatar(user.uid, file);
+        this.successMessage = 'Аватар успешно обновлен!';
+        this.errorMessage = '';
+      } catch (error) {
+        console.error('Ошибка при загрузке аватара:', error);
+        this.errorMessage = 'Ошибка при загрузке аватара.';
+        this.successMessage = '';
+      }
+    },
   },
   watch: {
     nickname() {
@@ -91,5 +126,17 @@ export default {
 </script>
 
 <style scoped>
+.avatar-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  margin-bottom: 20px;
+}
 
+.avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
 </style>

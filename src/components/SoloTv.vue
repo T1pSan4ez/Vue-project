@@ -37,11 +37,11 @@
       <v-row>
         <v-col cols="12" v-if="tvInfo.overview">
           <h2>Описание</h2>
-          <p class="text-h6">{{ tvInfo.overview }}</p>
+          <p>{{ tvInfo.overview }}</p>
         </v-col>
         <v-col cols="12" v-else>
           <h2>Описание</h2>
-          <p class="text-h6">Нет описания</p>
+          <p>Нет описания</p>
         </v-col>
       </v-row>
     </v-container>
@@ -131,10 +131,9 @@
 import Api from "@/services/api.js";
 import { RatingMixin } from "@/mixins/RatingMixin.js";
 import { FavoriteMixin } from "@/mixins/FavoriteMixin.js";
-
-import 'swiper/css';
 import CommentsComponent from "@/components/CommentsComponent.vue";
 import RatingComponent from "@/components/RatingComponent.vue";
+import Constants from "@/Constants.js";
 
 export default {
   name: "SoloTv",
@@ -176,11 +175,11 @@ export default {
       this.seasons = response.seasons;
 
       if (this.user) {
-        await this.checkIfFavorite('tv_favorites', 'tv_show_id', this.tvInfo.id);
+        await this.checkIfFavorite(Constants.COLLECTION_TV_FAVORITES, Constants.FIELD_TV_SHOW_ID, this.tvInfo.id);
       }
     },
     async handleAddToFavorites() {
-      await this.addToFavorites('tv_favorites', { user_id: this.user.uid, tv_show_id: this.tvInfo.id, title: this.tvInfo.name });
+      await this.addToFavorites(Constants.COLLECTION_TV_FAVORITES, { user_id: this.user.uid, tv_show_id: this.tvInfo.id, title: this.tvInfo.name });
     },
     getPosterUrl(posterPath) {
       return `https://image.tmdb.org/t/p/original/${posterPath}`;

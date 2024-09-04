@@ -25,6 +25,7 @@
 import { where} from 'firebase/firestore';
 import FirestoreService from '@/services/FirestoreService.js';
 import { useUserStore } from '@/store/UserStore.js';
+import Constants from '@/Constants.js';
 
 export default {
   name: "RatingComponent",
@@ -52,7 +53,7 @@ export default {
     async getUserRating() {
       if (!this.isUserAuthenticated) return;
 
-      const rating = await FirestoreService.getDocument('ratings', `${this.movieId}_${this.user.uid}`);
+      const rating = await FirestoreService.getDocument(Constants.COLLECTION_RATINGS, `${this.movieId}_${this.user.uid}`);
 
       if (rating) {
         this.userRating = rating.rating;
@@ -62,7 +63,7 @@ export default {
     async rateMovie(rating) {
       const userId = this.user.uid;
 
-      await FirestoreService.setDocument('ratings', `${this.movieId}_${userId}`, {
+      await FirestoreService.setDocument(Constants.COLLECTION_RATINGS, `${this.movieId}_${userId}`, {
         user_id: userId,
         movie_id: this.movieId,
         rating: rating
@@ -72,7 +73,7 @@ export default {
       this.getAverageRating();
     },
     getAverageRating() {
-      FirestoreService.onCollectionSnapshot('ratings', [where('movie_id', '==', this.movieId)], (snapshot) => {
+      FirestoreService.onCollectionSnapshot(Constants.COLLECTION_RATINGS, [where(Constants.FIELD_MOVIE_ID, '==', this.movieId)], (snapshot) => {
         let total = 0;
         let count = snapshot.size;
 

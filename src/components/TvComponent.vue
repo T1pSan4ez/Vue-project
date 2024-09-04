@@ -25,6 +25,7 @@
 <script>
 import { FavoriteMixin } from "@/mixins/FavoriteMixin.js";
 import { RatingMixin } from "@/mixins/RatingMixin.js";
+import Constants from "@/Constants.js";
 
 export default {
   name: "TvComponent",
@@ -47,7 +48,7 @@ export default {
   },
   mounted() {
     if (this.user) {
-      this.checkIfFavorite('tv_favorites', 'tv_show_id', this.card.id);
+      this.checkIfFavorite(Constants.COLLECTION_TV_FAVORITES, Constants.FIELD_TV_SHOW_ID, this.card.id);
     }
   },
 };

@@ -47,6 +47,7 @@ import TvComponent from "@/components/TvComponent.vue";
 import ApiService from "@/services/api.js";
 import FilterComponent from "@/components/FilterComponent.vue";
 import { FilterStore } from "@/store/FilterStore.js";
+import Constants from "@/Constants.js";
 
 export default {
   name: "CardsComponent",
@@ -72,7 +73,7 @@ export default {
       return FilterStore();
     },
     sortOrder() {
-      return this.filterStore.sortOrder === 'По убыванию' ? 'desc' : this.filterStore.sortOrder === 'По возрастанию' ? 'asc' : '';
+      return this.filterStore.sortOrder === 'По убыванию' ? Constants.SORT_DESC : this.filterStore.sortOrder === 'По возрастанию' ? Constants.SORT_ASC : '';
     },
     selectedGenres() {
       return this.filterStore.selectedGenres;
@@ -83,7 +84,7 @@ export default {
       try {
         const response = await ApiService.getPopularFilmsWithFilters(
             this.page,
-            this.sortOrder === 'desc' || this.sortOrder === 'asc' ? this.sortOrder : '',
+            this.sortOrder === Constants.SORT_DESC || this.sortOrder === Constants.SORT_ASC ? this.sortOrder : '',
             this.selectedGenres.join(',')
         );
         this.cards = response.results;
@@ -109,11 +110,11 @@ export default {
     },
     async fetchFilteredFilms(genres) {
       switch (this.currentFilter) {
-        case 'movies':
+        case Constants.FILTER_MOVIES:
           return await ApiService.getFilmsWithGenres(this.page, this.sortOrder, genres);
-        case 'tvShows':
+        case Constants.FILTER_TV_SHOWS:
           return await ApiService.getTvShows(this.page, this.sortOrder, genres);
-        case 'cartoons':
+        case Constants.FILTER_CARTOONS:
           return await ApiService.getCartoons(this.page, this.sortOrder, genres);
         default:
           return await ApiService.getPopularFilmsWithFilters(this.page, this.sortOrder, genres);
@@ -129,7 +130,7 @@ export default {
       this.getFilms();
     },
     async searchByName() {
-      let type = this.currentFilter === 'tvShows' ? 'tv' : 'movie';
+      let type = this.currentFilter === Constants.FILTER_TV_SHOWS ? Constants.TV : Constants.MOVIE;
       return await ApiService.searchByName(this.searchQuery, type, this.page);
     },
     filterCategory(filter) {

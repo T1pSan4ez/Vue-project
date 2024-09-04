@@ -4,6 +4,7 @@ import {createVuetify} from 'vuetify'
 import {initializeApp} from "firebase/app";
 import { getAuth} from 'firebase/auth';
 import { getFirestore} from 'firebase/firestore';
+import { getStorage } from "firebase/storage";
 
 import App from './App.vue'
 import router from './router/index.js'
@@ -27,10 +28,12 @@ const firebaseApp = initializeApp(firebaseConfig);
 
 const auth = getAuth(firebaseApp);
 const db = getFirestore(firebaseApp);
+const storage = getStorage(firebaseApp);
 
 export {
     auth,
-    db
+    db,
+    storage
 };
 
 const vuetify = createVuetify({

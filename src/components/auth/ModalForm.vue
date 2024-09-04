@@ -19,6 +19,7 @@
 </template>
 
 <script>
+import Constants from '@/Constants.js';
 export default {
   name: "ModalForm",
   props: {
@@ -41,7 +42,7 @@ export default {
   },
   computed: {
     themeClass() {
-      return this.$vuetify.theme.dark ? 'dark-mode' : 'light-mode';
+      return this.$vuetify.theme.dark ? Constants.DARK_MODE_CLASS : Constants.LIGHT_MODE_CLASS;
     }
   },
 }

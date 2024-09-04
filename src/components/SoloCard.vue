@@ -69,6 +69,7 @@ import { RatingMixin } from "@/mixins/RatingMixin.js";
 import { FavoriteMixin } from "@/mixins/FavoriteMixin.js";
 import CommentsComponent from "@/components/CommentsComponent.vue";
 import RatingComponent from "@/components/RatingComponent.vue";
+import Constants from "@/Constants.js";
 
 export default {
   name: "SoloCard",
@@ -108,7 +109,7 @@ export default {
       this.productionCountries = response.production_countries;
 
       if (this.user) {
-        await this.checkIfFavorite('favorites', 'movie_id', this.movieInfo.id);
+        await this.checkIfFavorite(Constants.COLLECTION_FAVORITES, Constants.FIELD_MOVIE_ID, this.movieInfo.id);
       }
     },
     async getVideos() {

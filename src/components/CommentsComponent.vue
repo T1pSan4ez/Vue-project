@@ -6,6 +6,12 @@
         <v-row align="center" justify="space-between" v-if="isUserAuthenticated">
           <v-col cols="12">
             <form @submit.prevent="addComment" style="display: flex; align-items: center;">
+              <v-avatar size="40" class="mr-3">
+                <img :src="userAvatar || 'https://cdn.vuetifyjs.com/images/profiles/1.png'"
+                     alt="User Avatar"
+                     class="avatar-image"
+                />
+              </v-avatar>
               <v-text-field
                   v-model="newComment"
                   label="Введите комментарий"
@@ -26,7 +32,11 @@
         <v-row v-if="comments.length > 0">
           <v-col cols="12">
             <v-list lines="two">
-              <v-list-item v-for="comment in comments" :key="comment.id">
+              <v-list-item
+                  v-for="comment in comments"
+                  :key="comment.id"
+                  :prepend-avatar="comment.avatarUrl || 'https://cdn.vuetifyjs.com/images/profiles/1.png'"
+              >
                 <v-list-item-title>
                   <span style="text-decoration: underline;">{{ comment.nickname }}</span>: {{ comment.text }}
                 </v-list-item-title>
@@ -56,6 +66,7 @@
 import { where, orderBy } from 'firebase/firestore';
 import FirestoreService from '@/services/FirestoreService.js';
 import { useUserStore } from '@/store/UserStore.js';
+import Constants from '@/Constants.js';
 
 export default {
   name: 'CommentsComponent',
@@ -71,6 +82,8 @@ export default {
       newComment: '',
       user: null,
       userNicknames: {},
+      userAvatars: {},
+      userAvatar: '',
     };
   },
   computed: {
@@ -81,7 +94,7 @@ export default {
   methods: {
     async addComment() {
       if (this.newComment.trim()) {
-        await FirestoreService.addDocument('comments', {
+        await FirestoreService.addDocument(Constants.COLLECTION_COMMENTS, {
           text: this.newComment,
           user_id: this.user.uid,
           movie_id: this.movieId,
@@ -93,21 +106,30 @@ export default {
     async deleteComment(id) {
       const comment = this.comments.find((c) => c.id === id);
       if (comment.user_id === this.user.uid) {
-        await FirestoreService.deleteDocument('comments', id);
+        await FirestoreService.deleteDocument(Constants.COLLECTION_COMMENTS, id);
       } else {
         alert('Вы не можете удалить этот комментарий.');
       }
     },
-    async fetchUserNickname(userId) {
-      if (this.userNicknames[userId]) {
-        return this.userNicknames[userId];
+    async fetchUserData(userId) {
+      if (this.userNicknames[userId] && this.userAvatars[userId]) {
+        return {
+          nickname: this.userNicknames[userId],
+          avatarUrl: this.userAvatars[userId]
+        };
       }
 
-      const userDoc = await FirestoreService.getDocument('users', userId);
+      const userDoc = await FirestoreService.getDocument(Constants.COLLECTION_USERS, userId);
       const nickname = userDoc ? userDoc.nickname : 'Аноним';
+      const avatarUrl = userDoc ? userDoc.avatar_url : null;
 
       this.userNicknames[userId] = nickname;
-      return nickname;
+      this.userAvatars[userId] = avatarUrl;
+
+      return {
+        nickname,
+        avatarUrl
+      };
     },
     async loadComments() {
       if (!this.movieId) {
@@ -116,16 +138,17 @@ export default {
       }
 
       FirestoreService.onCollectionSnapshot(
-          'comments',
-          [where('movie_id', '==', this.movieId), orderBy('timestamp', 'desc')],
+          Constants.COLLECTION_COMMENTS,
+          [where(Constants.FIELD_MOVIE_ID, '==', this.movieId), orderBy('timestamp', 'desc')],
           async (snapshot) => {
             this.comments = await Promise.all(
                 snapshot.docs.map(async (doc) => {
                   const data = doc.data();
-                  const nickname = await this.fetchUserNickname(data.user_id);
+                  const { nickname, avatarUrl } = await this.fetchUserData(data.user_id);
                   return {
                     id: doc.id,
                     nickname,
+                    avatarUrl,
                     ...data,
                   };
                 })
@@ -133,13 +156,20 @@ export default {
           }
       );
     },
+    async loadCurrentUserAvatar() {
+      if (this.user) {
+        const userDoc = await FirestoreService.getDocument(Constants.COLLECTION_USERS, this.user.uid);
+        this.userAvatar = userDoc ? userDoc.avatar_url || 'https://cdn.vuetifyjs.com/images/profiles/1.png' : 'https://cdn.vuetifyjs.com/images/profiles/1.png';
+      }
+    }
   },
   watch: {
     movieId: 'loadComments',
   },
-  mounted() {
+  async mounted() {
     this.user = useUserStore().user;
-    this.loadComments();
+    await this.loadComments();
+    await this.loadCurrentUserAvatar();
   },
 };
 </script>
@@ -152,5 +182,11 @@ export default {
   padding: 1px 5px;
   font-size: 12px;
   margin-top: 5px;
+}
+
+.avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 </style>

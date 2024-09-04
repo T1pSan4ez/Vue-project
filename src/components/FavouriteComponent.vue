@@ -92,6 +92,7 @@ import { db } from '../main.js';
 import { collection, getDocs, query, where, deleteDoc, onSnapshot, doc, getDoc } from 'firebase/firestore';
 import { useUserStore } from '@/store/UserStore.js';
 import Api from '@/services/api.js';
+import Constants from '@/Constants.js';
 
 export default {
   name: "FavouriteComponent",
@@ -111,7 +112,7 @@ export default {
   methods: {
     async loadUserNickname() {
       if (this.user?.uid) {
-        const userDocRef = doc(collection(db, 'users'), this.user.uid);
+        const userDocRef = doc(collection(db, Constants.COLLECTION_USERS), this.user.uid);
         const userDoc = await getDoc(userDocRef);
         if (userDoc.exists()) {
           this.userNickname = userDoc.data().nickname;
@@ -124,27 +125,27 @@ export default {
       if (!this.user) return;
 
       const favoritesQuery = query(
-          collection(db, 'favorites'),
-          where('user_id', '==', this.user.uid)
+          collection(db, Constants.COLLECTION_FAVORITES),
+          where(Constants.FIELD_USER_ID, '==', this.user.uid)
       );
 
       onSnapshot(favoritesQuery, async (snapshot) => {
         this.favoriteMovies = [];
 
         const movieIds = snapshot.docs.map((doc) => doc.data().movie_id);
-        await this.fetchFavorites(movieIds, 'movie');
+        await this.fetchFavorites(movieIds, Constants.MOVIE);
       });
 
       const tvFavoritesQuery = query(
-          collection(db, 'tv_favorites'),
-          where('user_id', '==', this.user.uid)
+          collection(db, Constants.COLLECTION_TV_FAVORITES),
+          where(Constants.FIELD_USER_ID, '==', this.user.uid)
       );
 
       onSnapshot(tvFavoritesQuery, async (snapshot) => {
         this.favoriteTvShows = [];
 
         const tvShowIds = snapshot.docs.map((doc) => doc.data().tv_show_id);
-        await this.fetchFavorites(tvShowIds, 'tv');
+        await this.fetchFavorites(tvShowIds, Constants.TV);
       });
     },
     async fetchFavorites(ids, type) {
@@ -154,12 +155,12 @@ export default {
         const validIds = ids.filter(id => id !== undefined && id !== null);
 
         if (!validIds.length) {
-          console.warn(`No valid ${type === 'movie' ? 'movie' : 'tv show'} IDs found.`);
+          console.warn(`Подходящих ${type === Constants.MOVIE ? 'movie' : 'tv show'} ID не найдено.`);
           return;
         }
 
         const fetchPromises = validIds.map(id => {
-          return type === 'movie' ? Api.getMovieDetails(id) : Api.getTvShowDetails(id);
+          return type === Constants.MOVIE ? Api.getMovieDetails(id) : Api.getTvShowDetails(id);
         });
 
         const results = await Promise.all(fetchPromises);
@@ -170,20 +171,20 @@ export default {
           this.favoriteTvShows.unshift(...results);
         }
       } catch (error) {
-        console.error(`Ошибка при загрузке избранных ${type === 'movie' ? 'фильмов' : 'сериалов'}:`, error);
+        console.error(`Ошибка при загрузке избранных ${type === Constants.MOVIE ? 'фильмов' : 'сериалов'}:`, error);
       }
     },
     getPosterUrl(posterPath) {
       return `https://image.tmdb.org/t/p/original/${posterPath}`;
     },
     goToDetails(id, type) {
-      const routeName = type === 'movie' ? 'solo-card' : 'tv-card';
+      const routeName = type === Constants.MOVIE ? 'solo-card' : 'tv-card';
       this.$router.push({name: routeName, params: {id}});
     },
     async removeFromFavorites(id, type) {
       try {
-        const collectionName = type === 'movie' ? 'favorites' : 'tv_favorites';
-        const fieldName = type === 'movie' ? 'movie_id' : 'tv_show_id';
+        const collectionName = type === Constants.MOVIE ? Constants.COLLECTION_FAVORITES : Constants.COLLECTION_TV_FAVORITES;
+        const fieldName = type === Constants.MOVIE ? Constants.FIELD_MOVIE_ID : Constants.FIELD_TV_SHOW_ID;
 
         const docToDeleteQuery = query(
             collection(db, collectionName),
@@ -196,7 +197,7 @@ export default {
           await deleteDoc(doc.ref);
         }
 
-        if (type === 'movie') {
+        if (type === Constants.MOVIE) {
           this.favoriteMovies = this.favoriteMovies.filter(movie => movie.id !== id);
         } else {
           this.favoriteTvShows = this.favoriteTvShows.filter(tvShow => tvShow.id !== id);

@@ -1,7 +1,7 @@
-// mixins/FavoriteMixin.js
 import { db } from '@/main.js';
 import { collection, addDoc, query, where, getDocs } from 'firebase/firestore';
 import { useUserStore } from '@/store/UserStore.js';
+import Constants from '@/Constants.js';
 
 export const FavoriteMixin = {
     data() {
@@ -21,7 +21,7 @@ export const FavoriteMixin = {
 
             const favoritesQuery = query(
                 collection(db, collectionName),
-                where('user_id', '==', this.user.uid),
+                where(Constants.FIELD_USER_ID, '==', this.user.uid),
                 where(field, '==', id)
             );
 

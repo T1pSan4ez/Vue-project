@@ -1,7 +1,6 @@
 import { defineStore } from 'pinia'
-
-
-export const useUserStore = defineStore('user', {
+import Constants from '@/Constants.js';
+export const useUserStore = defineStore(Constants.LOCAL_STORAGE_USER, {
     state: () => {
         return { user: null }
     },
@@ -9,10 +8,10 @@ export const useUserStore = defineStore('user', {
     actions: {
         setUser(user) {
            this.user = user;
-           localStorage.setItem('user', JSON.stringify(user));
+           localStorage.setItem(Constants.LOCAL_STORAGE_USER, JSON.stringify(user));
         },
         initUser() {
-           const user = localStorage.getItem('user');
+           const user = localStorage.getItem(Constants.LOCAL_STORAGE_USER);
            if (user) {
                this.user = JSON.parse(user);
                return true;
@@ -23,7 +22,7 @@ export const useUserStore = defineStore('user', {
         },
         clearUser() {
             this.user = null;
-            localStorage.removeItem('user');
+            localStorage.removeItem(Constants.LOCAL_STORAGE_USER);
         },
     },
 })

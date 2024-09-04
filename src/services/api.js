@@ -1,19 +1,14 @@
-// services/ApiService.js
 import axios from "axios";
+import Constants from '@/Constants.js';
 
 const axiosInstance = axios.create({
-    baseURL: "https://api.themoviedb.org/3/",
+    baseURL: Constants.API_BASE_URL,
     headers: { 'Content-Type': 'application/json' },
 });
 
-const API_KEY = import.meta.env.VITE_API_KEY ?? '0099006263f714dc2164a25ebd2cbce3';
-const LANGUAGE = 'ru-RU';
-const VOTE_COUNT = 200;
-const WITHOUT_MULT = '16';
-
 class ApiService {
     constructor() {
-        this.apiKey = API_KEY;
+        this.apiKey = Constants.API_KEY;
     }
 
     async fetchData(endpoint, params = {}) {
@@ -32,10 +27,10 @@ class ApiService {
 
     getPopularFilmsWithFilters(page = 1, sortOrder = '', genres = '') {
         const params = {
-            language: LANGUAGE,
+            language: Constants.API_LANGUAGE,
             page,
             sort_by: sortOrder ? `vote_average.${sortOrder}` : 'popularity.desc',
-            'vote_count.gte': VOTE_COUNT,
+            'vote_count.gte': Constants.API_VOTE_COUNT,
         };
 
         if (genres) {
@@ -47,11 +42,11 @@ class ApiService {
 
     getFilmsWithGenres(page, sortOrder, genres) {
         const params = {
-            language: LANGUAGE,
+            language: Constants.API_LANGUAGE,
             page,
-            without_genres: WITHOUT_MULT,
+            without_genres: Constants.API_WITHOUT_MULT,
             sort_by: sortOrder ? `vote_average.${sortOrder}` : undefined,
-            'vote_count.gte': VOTE_COUNT,
+            'vote_count.gte': Constants.API_VOTE_COUNT,
         };
 
         if (genres) {
@@ -63,11 +58,11 @@ class ApiService {
 
     getTvShows(page, sortOrder, genres) {
         const params = {
-            language: LANGUAGE,
+            language: Constants.API_LANGUAGE,
             page,
-            without_genres: WITHOUT_MULT,
+            without_genres: Constants.API_WITHOUT_MULT,
             sort_by: sortOrder ? `vote_average.${sortOrder}` : undefined,
-            'vote_count.gte': VOTE_COUNT,
+            'vote_count.gte': Constants.API_VOTE_COUNT,
         };
 
         if (genres) {
@@ -78,22 +73,22 @@ class ApiService {
     }
 
     getCartoons(page, sortOrder, genres) {
-        const genreParam = genres ? `${genres},${WITHOUT_MULT}` : WITHOUT_MULT;
+        const genreParam = genres ? `${genres},${Constants.API_WITHOUT_MULT}` : Constants.API_WITHOUT_MULT;
         const params = {
-            language: LANGUAGE,
+            language: Constants.API_LANGUAGE,
             page,
             sort_by: sortOrder ? `vote_average.${sortOrder}` : undefined,
             with_genres: genreParam,
-            'vote_count.gte': VOTE_COUNT,
+            'vote_count.gte': Constants.API_VOTE_COUNT,
         };
 
         return this.fetchData('discover/movie', params);
     }
 
     searchByName(query, type, page = 1) {
-        const endpoint = type === 'movie' ? 'search/movie' : 'search/tv';
+        const endpoint = type === Constants.MOVIE ? 'search/movie' : 'search/tv';
         const params = {
-            language: LANGUAGE,
+            language: Constants.API_LANGUAGE,
             query: query,
             page,
         };
@@ -101,15 +96,15 @@ class ApiService {
     }
 
     getMovieDetails(movieId) {
-        return this.fetchData(`/movie/${movieId}`, { language: LANGUAGE, include_video: true });
+        return this.fetchData(`/movie/${movieId}`, { language: Constants.API_LANGUAGE, include_video: true });
     }
 
     getTvShowDetails(tvShowId) {
-        return this.fetchData(`/tv/${tvShowId}`, { language: LANGUAGE, include_video: true, 'vote_count.gte': VOTE_COUNT });
+        return this.fetchData(`/tv/${tvShowId}`, { language: Constants.API_LANGUAGE, include_video: true, 'vote_count.gte': Constants.API_VOTE_COUNT });
     }
 
     getVideos(movieId) {
-        return this.fetchData(`/movie/${movieId}/videos`, { language: LANGUAGE });
+        return this.fetchData(`/movie/${movieId}/videos`, { language: Constants.API_LANGUAGE });
     }
 }
 

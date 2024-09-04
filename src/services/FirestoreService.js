@@ -1,5 +1,6 @@
 import { db } from '@/main.js';
 import { collection, doc, getDoc, setDoc, addDoc, deleteDoc, onSnapshot, query } from 'firebase/firestore'
+import Constants from '@/Constants.js';
 
 class FirestoreService {
     async getDocument(collectionName, docId) {
@@ -29,7 +30,7 @@ class FirestoreService {
 
     async getGenres() {
         try {
-            const docRef = doc(db, 'config', '7EHRc92wX1ww8XH37ZWQ');
+            const docRef = doc(db, Constants.COLLECTION_CONFIG, Constants.DOC_GENRES_ID);
             const docSnap = await getDoc(docRef);
 
             if (docSnap.exists()) {

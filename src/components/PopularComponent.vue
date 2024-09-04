@@ -26,6 +26,7 @@
 <script>
 import { FavoriteMixin } from "@/mixins/FavoriteMixin.js";
 import { RatingMixin } from "@/mixins/RatingMixin.js";
+import Constants from "@/Constants.js";
 
 export default {
   name: "PopularComponent",
@@ -48,7 +49,7 @@ export default {
   },
   mounted() {
     if (this.user) {
-      this.checkIfFavorite('favorites', 'movie_id', this.card.id);
+      this.checkIfFavorite(Constants.COLLECTION_FAVORITES, Constants.FIELD_MOVIE_ID, this.card.id);
     }
   },
 };
