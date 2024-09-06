@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import Constants from '@/Constants.js';
+import Constants from '@/constants.js';
 export const useUserStore = defineStore(Constants.LOCAL_STORAGE_USER, {
     state: () => {
         return { user: null }

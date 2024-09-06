@@ -25,7 +25,7 @@
           <v-slide-group-item v-for="movie in favoriteMovies" :key="movie.id">
             <v-card class="ma-5" max-width="250" rounded>
               <v-img
-                  :src="getPosterUrl(movie.poster_path)"
+                  :src="movie.poster_path ? getPosterUrl(movie.poster_path) : '/public/imagenotfound.png'"
                   height="400px"
                   width="250px"
                   cover
@@ -64,7 +64,7 @@
           <v-slide-group-item v-for="tvShow in favoriteTvShows" :key="tvShow.id">
             <v-card class="ma-5" max-width="250" rounded>
               <v-img
-                  :src="getPosterUrl(tvShow.poster_path)"
+                  :src="tvShow.poster_path ? getPosterUrl(tvShow.poster_path) : '/public/imagenotfound.png'"
                   height="400px"
                   width="250px"
                   cover
@@ -88,11 +88,11 @@
 </template>
 
 <script>
-import { db } from '../main.js';
-import { collection, getDocs, query, where, deleteDoc, onSnapshot, doc, getDoc } from 'firebase/firestore';
+import { db } from '../../main.js';
+import { collection, getDocs, query, where, deleteDoc,  doc, getDoc, orderBy } from 'firebase/firestore';
 import { useUserStore } from '@/store/UserStore.js';
 import Api from '@/services/api.js';
-import Constants from '@/Constants.js';
+import Constants from '/src/constants.js';
 
 export default {
   name: "FavouriteComponent",
@@ -126,27 +126,23 @@ export default {
 
       const favoritesQuery = query(
           collection(db, Constants.COLLECTION_FAVORITES),
-          where(Constants.FIELD_USER_ID, '==', this.user.uid)
+          where(Constants.FIELD_USER_ID, '==', this.user.uid),
+          orderBy('date_added', 'desc')
       );
 
-      onSnapshot(favoritesQuery, async (snapshot) => {
-        this.favoriteMovies = [];
-
-        const movieIds = snapshot.docs.map((doc) => doc.data().movie_id);
-        await this.fetchFavorites(movieIds, Constants.MOVIE);
-      });
+      const snapshot = await getDocs(favoritesQuery);
+      const movieIds = snapshot.docs.map((doc) => doc.data().movie_id);
+      await this.fetchFavorites(movieIds, Constants.MOVIE);
 
       const tvFavoritesQuery = query(
           collection(db, Constants.COLLECTION_TV_FAVORITES),
-          where(Constants.FIELD_USER_ID, '==', this.user.uid)
+          where(Constants.FIELD_USER_ID, '==', this.user.uid),
+          orderBy('date_added', 'desc')
       );
 
-      onSnapshot(tvFavoritesQuery, async (snapshot) => {
-        this.favoriteTvShows = [];
-
-        const tvShowIds = snapshot.docs.map((doc) => doc.data().tv_show_id);
-        await this.fetchFavorites(tvShowIds, Constants.TV);
-      });
+      const tvSnapshot = await getDocs(tvFavoritesQuery);
+      const tvShowIds = tvSnapshot.docs.map((doc) => doc.data().tv_show_id);
+      await this.fetchFavorites(tvShowIds, Constants.TV);
     },
     async fetchFavorites(ids, type) {
       if (!ids.length) return;
@@ -166,9 +162,9 @@ export default {
         const results = await Promise.all(fetchPromises);
 
         if (type === 'movie') {
-          this.favoriteMovies.unshift(...results);
+          this.favoriteMovies = results;
         } else {
-          this.favoriteTvShows.unshift(...results);
+          this.favoriteTvShows = results;
         }
       } catch (error) {
         console.error(`Ошибка при загрузке избранных ${type === Constants.MOVIE ? 'фильмов' : 'сериалов'}:`, error);
@@ -188,13 +184,15 @@ export default {
 
         const docToDeleteQuery = query(
             collection(db, collectionName),
-            where('userId', '==', this.user.uid),
+            where(Constants.FIELD_USER_ID, '==', this.user.uid),
             where(fieldName, '==', id)
         );
 
         const snapshot = await getDocs(docToDeleteQuery);
-        for (const doc of snapshot.docs) {
-          await deleteDoc(doc.ref);
+
+        if (snapshot.empty) {
+          console.warn('Документ не найден для удаления.');
+          return;
         }
 
         if (type === Constants.MOVIE) {
@@ -202,7 +200,11 @@ export default {
         } else {
           this.favoriteTvShows = this.favoriteTvShows.filter(tvShow => tvShow.id !== id);
         }
-        // alert(`${type === 'movie' ? 'Фильм' : 'Сериал'} успешно удален из избранного.`);
+
+        for (const doc of snapshot.docs) {
+          await deleteDoc(doc.ref);
+        }
+
       } catch (error) {
         console.error('Ошибка при удалении из избранного:', error);
       }

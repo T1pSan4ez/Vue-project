@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import Constants from '@/Constants.js';
+import Constants from '/src/constants.js';
 
 export const FilterStore = defineStore('filter', {
     state: () => ({
@@ -16,11 +16,6 @@ export const FilterStore = defineStore('filter', {
         resetFilters() {
             this.selectedGenres = [];
             this.sortOrder = Constants.SORT_NONE;
-        },
-    },
-    getters: {
-        selectedGenreNames(state) {
-            return state.selectedGenres;
         },
     },
 });

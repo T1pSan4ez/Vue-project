@@ -1,5 +1,5 @@
 import axios from "axios";
-import Constants from '@/Constants.js';
+import Constants from '@/constants.js';
 
 const axiosInstance = axios.create({
     baseURL: Constants.API_BASE_URL,
@@ -8,7 +8,7 @@ const axiosInstance = axios.create({
 
 class ApiService {
     constructor() {
-        this.apiKey = Constants.API_KEY;
+        this.apiKey = import.meta.env.VITE_API_KEY ?? '0099006263f714dc2164a25ebd2cbce3';
     }
 
     async fetchData(endpoint, params = {}) {
@@ -96,7 +96,7 @@ class ApiService {
     }
 
     getMovieDetails(movieId) {
-        return this.fetchData(`/movie/${movieId}`, { language: Constants.API_LANGUAGE, include_video: true });
+        return this.fetchData(`/movie/${movieId}`, { language: Constants.API_LANGUAGE, include_video: true});
     }
 
     getTvShowDetails(tvShowId) {

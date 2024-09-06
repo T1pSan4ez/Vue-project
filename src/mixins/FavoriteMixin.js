@@ -1,7 +1,7 @@
 import { db } from '@/main.js';
 import { collection, addDoc, query, where, getDocs } from 'firebase/firestore';
 import { useUserStore } from '@/store/UserStore.js';
-import Constants from '@/Constants.js';
+import Constants from '/src/constants.js';
 
 export const FavoriteMixin = {
     data() {
@@ -31,9 +31,14 @@ export const FavoriteMixin = {
         async addToFavorites(collectionName, data) {
             try {
                 const favoritesCollection = collection(db, collectionName);
-                await addDoc(favoritesCollection, data);
+
+                const dateAdded = new Date();
+                await addDoc(favoritesCollection, {
+                    ...data,
+                    date_added: dateAdded,
+                });
+
                 this.isFavorite = true;
-                // alert('Добавлено в избранное!');
             } catch (error) {
                 console.error('Ошибка при добавлении в избранное:', error);
             }

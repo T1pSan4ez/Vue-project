@@ -1,34 +1,45 @@
 import { createWebHistory, createRouter } from 'vue-router';
 import { useUserStore } from '@/store/UserStore.js';
 
-import CardsComponent from "@/components/CardsComponent.vue";
-import SoloCard from "@/components/SoloCard.vue";
-import SoloTv from "@/components/SoloTv.vue";
-import FavoriteComponent from "@/components/FavouriteComponent.vue";
+import CardsComponent from "@/components/movie/CardsComponent.vue";
+import FavoriteComponent from "@/components/movieFunctional/FavouriteComponent.vue";
 import UserComponent from "@/components/auth/UserComponent.vue";
 import NotFound from "@/components/NotFound.vue";
 
 const routes = [
     {
         path: '/',
-        name: 'home',
-        component: CardsComponent,
-    },
-    {
-        path: '/main',
         name: 'main',
         component: CardsComponent,
     },
     {
+        path: '/movie',
+        name: 'movie',
+        component: CardsComponent,
+        props: { currentFilter: 'movies' },
+    },
+    {
+        path: '/tv-shows',
+        name: 'tv-shows',
+        component: CardsComponent,
+        props: { currentFilter: 'tvShows' },
+    },
+    {
+        path: '/cartoons',
+        name: 'cartoons',
+        component: CardsComponent,
+        props: { currentFilter: 'cartoons' },
+    },
+    {
         path: '/movie/:id',
         name: 'solo-card',
-        component: SoloCard,
+        component: () => import('@/components/movie/SoloCard.vue'),
         props: true
     },
     {
         path: '/tvSerial/:id',
         name: 'tv-card',
-        component: SoloTv,
+        component: () => import('@/components/tvShows/SoloTv.vue'),
         props: true
     },
     {

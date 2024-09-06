@@ -1,5 +1,5 @@
 <template>
-  <v-container>
+  <v-container max-width="1200px">
     <v-row>
       <v-col
           v-for="genre in genres"
@@ -22,7 +22,10 @@
             :items="['Без сортировки', 'По убыванию', 'По возрастанию']"
             label="Сортировать по рейтингу"
         ></v-select>
-        <v-btn color="primary" @click="applyFilter">Применить фильтр</v-btn>
+        <v-col class="buttons-container">
+          <v-btn color="primary" @click="applyFilter">Применить фильтр</v-btn>
+          <v-btn color="primary" @click="resetFiltersAndFetch">Сбросить фильтры</v-btn>
+        </v-col>
       </v-col>
       <v-col cols="8">
         <p>Выбранные жанры:</p>
@@ -39,8 +42,8 @@
 </template>
 
 <script>
-import { FilterStore } from '@/store/FilterStore';
-import FirestoreService from '@/services/FirestoreService';
+import { FilterStore } from '@/store/FilterStore.js';
+import FirestoreService from '@/services/FirestoreService.js';
 
 export default {
   name: "FilterComponent",
@@ -85,7 +88,11 @@ export default {
     },
     applyFilter() {
       this.$emit('filter-applied', { sortOrder: this.sortOrder, selectedGenres: this.selectedGenres });
-    }
+    },
+    resetFiltersAndFetch() {
+      this.filterStore.resetFilters();
+      this.applyFilter();
+    },
   },
   mounted() {
     this.loadGenres();
@@ -106,5 +113,11 @@ export default {
   font-weight: bold;
   text-decoration: underline;
   color: #1976D2;
+}
+
+.buttons-container {
+  display: flex;
+  justify-content: space-between;
+  gap: 25px;
 }
 </style>

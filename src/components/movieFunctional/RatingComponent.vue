@@ -25,7 +25,7 @@
 import { where} from 'firebase/firestore';
 import FirestoreService from '@/services/FirestoreService.js';
 import { useUserStore } from '@/store/UserStore.js';
-import Constants from '@/Constants.js';
+import Constants from '/src/constants.js';
 
 export default {
   name: "RatingComponent",

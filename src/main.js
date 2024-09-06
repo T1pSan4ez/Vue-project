@@ -97,7 +97,7 @@ const vuetify = createVuetify({
                 colors: {
                     background: '#0D1B2A',
                     surface: '#1B263B',
-                    primary: '#415A77',
+                    primary: '#3385f4',
                     secondary: '#778DA9',
                     accent: '#E0E1DD',
                     error: '#D32F2F',

@@ -57,12 +57,12 @@ export default {
         await AuthService.register(this.user.email, this.user.password, this.user.nickname);
         this.registerAlert = 'Аккаунт создан!';
         this.registrationError = null;
-        await router.push({name: 'home'});
+        await router.push({name: 'main'});
         window.location.reload();
       } catch (error) {
         console.error('Ошибка регистрации:', error);
         this.registerAlert = null;
-        this.registrationError = 'Неправильные данные или такой пользователь уже есть! Попробуйте снова!';
+        this.registrationError = 'Проверьте введенные данные или такой пользователь уже есть! Попробуйте снова!';
       }
     },
     clearMessages() {

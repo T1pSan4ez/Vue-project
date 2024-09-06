@@ -19,7 +19,7 @@
 </template>
 
 <script>
-import Constants from '@/Constants.js';
+import Constants from '/src/constants.js';
 export default {
   name: "ModalForm",
   props: {

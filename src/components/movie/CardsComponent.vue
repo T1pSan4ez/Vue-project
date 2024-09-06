@@ -2,15 +2,8 @@
   <div>
     <v-container>
       <v-row justify="space-between">
-        <v-col cols="auto">
-          <v-tabs v-model="tab" align-tabs="center" color="deep-orange">
-            <v-tab :value="1" @click="filterCategory('movies')">Фильмы</v-tab>
-            <v-tab :value="2" @click="filterCategory('tvShows')">Сериалы</v-tab>
-            <v-tab :value="3" @click="filterCategory('cartoons')">Мультфильмы</v-tab>
-          </v-tabs>
-        </v-col>
         <v-col>
-          <v-text-field v-instruction="'Для поиска сериалов, выберите категорию слева!'" v-model="searchQuery"
+          <v-text-field v-instruction="'Для поиска сериалов, выберите соотвующую категорию!'" v-model="searchQuery"
                         label="Поиск по названию:" @input="searchFilms" append-inner-icon="mdi-magnify"></v-text-field>
         </v-col>
       </v-row>
@@ -42,12 +35,12 @@
 </template>
 
 <script>
-import PopularComponent from "@/components/PopularComponent.vue";
-import TvComponent from "@/components/TvComponent.vue";
+import PopularComponent from "@/components/movie/PopularComponent.vue";
+import TvComponent from "@/components/tvShows/TvComponent.vue";
 import ApiService from "@/services/api.js";
-import FilterComponent from "@/components/FilterComponent.vue";
-import { FilterStore } from "@/store/FilterStore.js";
-import Constants from "@/Constants.js";
+import FilterComponent from "@/components/movieFunctional/FilterComponent.vue";
+import {FilterStore} from "@/store/FilterStore.js";
+import Constants from "/src/constants.js";
 
 export default {
   name: "CardsComponent",
@@ -56,15 +49,19 @@ export default {
     TvComponent,
     FilterComponent,
   },
+  props: {
+    currentFilter: {
+      type: String,
+      default: '',
+    },
+  },
   data() {
     return {
-      tab: null,
       cards: [],
       page: 1,
       totalPages: 1,
       maxPages: 500,
       searchQuery: "",
-      currentFilter: '',
       showFilters: false,
     };
   },
@@ -80,19 +77,6 @@ export default {
     },
   },
   methods: {
-    async getPopular() {
-      try {
-        const response = await ApiService.getPopularFilmsWithFilters(
-            this.page,
-            this.sortOrder === Constants.SORT_DESC || this.sortOrder === Constants.SORT_ASC ? this.sortOrder : '',
-            this.selectedGenres.join(',')
-        );
-        this.cards = response.results;
-        this.updatePagination(response.total_pages);
-      } catch (error) {
-        console.error("Ошибка при загрузке популярных фильмов:", error);
-      }
-    },
     async getFilms() {
       try {
         let response;
@@ -124,34 +108,55 @@ export default {
       this.filterStore.setSortOrder(filterData.sortOrder);
       this.filterStore.setSelectedGenres(filterData.selectedGenres);
       this.page = 1;
+      this.updateRouteQuery();
       this.getFilms();
     },
     handlePageChange() {
+      this.updateRouteQuery();
       this.getFilms();
     },
     async searchByName() {
       let type = this.currentFilter === Constants.FILTER_TV_SHOWS ? Constants.TV : Constants.MOVIE;
       return await ApiService.searchByName(this.searchQuery, type, this.page);
     },
-    filterCategory(filter) {
-      this.filterStore.resetFilters();
-
-      this.page = 1;
-      this.currentFilter = filter;
-      this.searchQuery = "";
-      this.getFilms();
-    },
     searchFilms() {
       this.page = 1;
+      this.updateRouteQuery();
       this.getFilms();
     },
     updatePagination(totalPages) {
       window.scrollTo(0, 0);
       this.totalPages = Math.min(totalPages, this.maxPages);
     },
+    updateRouteQuery() {
+      const query = {};
+
+      if (this.searchQuery) {
+        query.search = this.searchQuery;
+      }
+      if (this.currentFilter) {
+        query.filter = this.currentFilter;
+      }
+      if (this.page > 1) {
+        query.page = this.page;
+      }
+
+      this.$router.push({name: this.$route.name, query});
+    },
+
   },
-  mounted() {
-    this.getPopular();
+  watch: {
+    '$route.query': {
+      async handler(newQuery) {
+        this.page = +newQuery.page || 1;
+        this.searchQuery = newQuery.search || '';
+        await this.getFilms();
+      },
+      immediate: true,
+    },
+  },
+  async mounted() {
+    await this.getFilms();
   },
 };
 </script>

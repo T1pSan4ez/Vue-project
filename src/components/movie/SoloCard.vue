@@ -9,16 +9,16 @@
       </v-row>
       <v-row>
         <v-col cols="12" md="4">
-          <v-img :src="getPosterUrl(movieInfo.poster_path)"></v-img>
+          <v-img :src="movieInfo.poster_path ? getPosterUrl(movieInfo.poster_path) : '/public/imagenotfound.png'"></v-img>
         </v-col>
         <v-col cols="12" md="8">
           <div class="about-movie">
             <p v-if="movieInfo.vote_average"><strong class="underline">Рейтинг IMDB:</strong><span
                 :class="getRatingClass(movieInfo.vote_average)"> {{ movieInfo.vote_average }}</span>
               ({{ movieInfo.vote_count }})</p>
-            <p v-if="movieInfo.release_date"><strong class="underline">Дата выхода:</strong> {{
-                movieInfo.release_date
-              }}</p>
+            <p v-if="movieInfo.release_date"><strong class="underline">Дата выхода: </strong>
+              <span v-month-name>{{ movieInfo.release_date }}</span>
+             </p>
             <p v-if="productionCountries.length > 0"><strong class="underline">Страна:</strong>
               {{ getCountryName(productionCountries) }}</p>
             <p v-if="productionCompanies.length > 0"><strong class="underline">Производство:</strong>
@@ -34,7 +34,7 @@
         </v-col>
       </v-row>
     </v-container>
-    <v-container class="width-container">
+    <v-container class="width-container" v-if="movieInfo.overview">
       <v-row>
         <v-col cols="12">
           <h2>Описание</h2>
@@ -67,15 +67,19 @@
 import Api from "@/services/api.js";
 import { RatingMixin } from "@/mixins/RatingMixin.js";
 import { FavoriteMixin } from "@/mixins/FavoriteMixin.js";
-import CommentsComponent from "@/components/CommentsComponent.vue";
-import RatingComponent from "@/components/RatingComponent.vue";
-import Constants from "@/Constants.js";
+import CommentsComponent from "@/components/movieFunctional/CommentsComponent.vue";
+import RatingComponent from "@/components/movieFunctional/RatingComponent.vue";
+import Constants from "@/constants.js";
+import monthNameDirective from "@/directives/monthNameDirective.js";
 
 export default {
   name: "SoloCard",
   components: {
     CommentsComponent,
     RatingComponent
+  },
+  directives: {
+    monthName: monthNameDirective,
   },
   mixins: [RatingMixin, FavoriteMixin],
   props: {
@@ -102,7 +106,9 @@ export default {
   methods: {
     async getInfo() {
       const response = await Api.getMovieDetails(this.id);
+      console.log(response);
       this.movieInfo = response;
+
       this.productionCompanies = response.production_companies;
       this.genresInfo = response.genres;
       this.belongToCollection = response.belongs_to_collection;

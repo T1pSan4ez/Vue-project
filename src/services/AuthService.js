@@ -1,9 +1,9 @@
 import { auth, db, storage } from "@/main.js";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updatePassword, EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
 import { doc, setDoc, getDoc, updateDoc } from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 import { useUserStore } from "@/store/UserStore.js";
-import Constants from '@/Constants.js';
+import Constants from '@/constants.js';
 
 export const AuthService = {
     async login(email, password) {
@@ -57,6 +57,20 @@ export const AuthService = {
             return downloadURL;
         } catch (error) {
             console.error("Ошибка при загрузке аватара:", error);
+            throw error;
+        }
+    },
+
+    async deleteAvatar(uid) {
+        try {
+            const storageRef = ref(storage, `avatars/${uid}`);
+            await deleteObject(storageRef);
+            await updateDoc(doc(db, Constants.COLLECTION_USERS, uid), {
+                [Constants.FIELD_AVATAR_URL]: Constants.DEFAULT_AVATAR
+            });
+            return Constants.DEFAULT_AVATAR;
+        } catch (error) {
+            console.error("Ошибка при удалении аватара:", error);
             throw error;
         }
     }

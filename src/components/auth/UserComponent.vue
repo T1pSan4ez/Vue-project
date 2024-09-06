@@ -10,9 +10,9 @@
           <v-form>
             <div class="avatar-container">
               <v-avatar size="180">
-                <img :src="avatarUrl || 'https://cdn.vuetifyjs.com/images/profiles/1.png'"
-                     alt="User Avatar"
-                     class="avatar-image"
+                <img :src="avatarUrl || 'favicon.ico'"
+                alt="User Avatar"
+                class="avatar-image"
                 />
               </v-avatar>
               <v-file-input
@@ -20,6 +20,7 @@
                   @change="handleAvatarUpload"
                   accept="image/*"
               ></v-file-input>
+              <v-btn @click.prevent="deleteAvatar" color="error" v-if="avatarUrl !== 'favicon.ico'">Удалить аватар</v-btn>
             </div>
             <v-text-field v-model="nickname" label="Nickname" />
             <v-btn class="mb-5" @click.prevent="updateNickname">Изменить имя</v-btn>
@@ -49,7 +50,7 @@ export default {
       newPassword: '',
       successMessage: '',
       errorMessage: '',
-      avatarUrl: '',
+      avatarUrl: 'favicon.ico',
       rules: {
         required: (value) => !!value || 'Required.',
       },
@@ -62,7 +63,7 @@ export default {
         const userProfile = await AuthService.getUserProfile(user.uid);
         if (userProfile) {
           this.nickname = userProfile.nickname;
-          this.avatarUrl = userProfile.avatar_url || '';
+          this.avatarUrl = userProfile.avatar_url || 'favicon.ico';
         }
       }
     });
@@ -107,6 +108,18 @@ export default {
         this.successMessage = '';
       }
     },
+    async deleteAvatar() {
+      try {
+        const user = auth.currentUser;
+        this.avatarUrl = await AuthService.deleteAvatar(user.uid);
+        this.successMessage = 'Аватар успешно удален!';
+        this.errorMessage = '';
+      } catch (error) {
+        console.error('Ошибка при удалении аватара:', error);
+        this.errorMessage = 'Ошибка при удалении аватара.';
+        this.successMessage = '';
+      }
+    },
   },
   watch: {
     nickname() {
@@ -130,6 +143,7 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
+  height: 100%;
   gap: 20px;
   margin-bottom: 20px;
 }

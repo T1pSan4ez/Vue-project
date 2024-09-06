@@ -1,6 +1,6 @@
 import { db } from '@/main.js';
-import { collection, doc, getDoc, setDoc, addDoc, deleteDoc, onSnapshot, query } from 'firebase/firestore'
-import Constants from '@/Constants.js';
+import { collection, doc, getDoc, setDoc, addDoc, deleteDoc, onSnapshot, query, updateDoc } from 'firebase/firestore';
+import Constants from '@/constants.js';
 
 class FirestoreService {
     async getDocument(collectionName, docId) {
@@ -21,6 +21,11 @@ class FirestoreService {
     async deleteDocument(collectionName, docId) {
         const docRef = doc(db, collectionName, docId);
         await deleteDoc(docRef);
+    }
+
+    async updateDocument(collectionName, docId, data) {
+        const docRef = doc(db, collectionName, docId);
+        await updateDoc(docRef, data);
     }
 
     onCollectionSnapshot(collectionName, constraints, callback) {

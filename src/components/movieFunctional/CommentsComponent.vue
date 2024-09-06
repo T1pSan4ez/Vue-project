@@ -6,8 +6,8 @@
         <v-row align="center" justify="space-between" v-if="isUserAuthenticated">
           <v-col cols="12">
             <form @submit.prevent="addComment" style="display: flex; align-items: center;">
-              <v-avatar size="40" class="mr-3">
-                <img :src="userAvatar || 'https://cdn.vuetifyjs.com/images/profiles/1.png'"
+              <v-avatar size="80" class="mr-3">
+                <img :src="userAvatar || 'favicon.ico'"
                      alt="User Avatar"
                      class="avatar-image"
                 />
@@ -35,15 +35,36 @@
               <v-list-item
                   v-for="comment in comments"
                   :key="comment.id"
-                  :prepend-avatar="comment.avatarUrl || 'https://cdn.vuetifyjs.com/images/profiles/1.png'"
+                  :prepend-avatar="comment.avatarUrl || 'favicon.ico'"
               >
                 <v-list-item-title>
-                  <span style="text-decoration: underline;">{{ comment.nickname }}</span>: {{ comment.text }}
+                  <span  style="font-size: 20px;">{{ comment.nickname }}</span>: {{ comment.text }}
                 </v-list-item-title>
                 <v-list-item-subtitle>
                   {{ 'Добавлено: ' + new Date(comment.timestamp.seconds * 1000).toLocaleString() }}
                 </v-list-item-subtitle>
-
+                <v-list-item-action>
+                  <v-icon
+                      small
+                      @click="likeComment(comment)"
+                      :class="{'text-primary': isUserAuthenticated && !comment.likedBy.includes(user.uid), 'text-muted': !isUserAuthenticated || comment.likedBy.includes(user.uid)}"
+                      :disabled="!isUserAuthenticated || comment.likedBy.includes(user.uid)"
+                      style="cursor: pointer; margin-right: 8px;"
+                  >
+                    mdi-thumb-up
+                  </v-icon>
+                  <span>{{ comment.likes }}</span>
+                  <v-icon
+                      small
+                      @click="dislikeComment(comment)"
+                      :class="{'text-primary': isUserAuthenticated && !comment.dislikedBy.includes(user.uid), 'text-muted': !isUserAuthenticated || comment.dislikedBy.includes(user.uid)}"
+                      :disabled="!isUserAuthenticated || comment.dislikedBy.includes(user.uid)"
+                      style="cursor: pointer; margin-left: 16px; margin-right: 8px;"
+                  >
+                    mdi-thumb-down
+                  </v-icon>
+                  <span>{{ comment.dislikes }}</span>
+                </v-list-item-action>
                 <v-list-item-action>
                   <button
                       v-if="isUserAuthenticated && comment.user_id === user.uid"
@@ -63,10 +84,10 @@
 </template>
 
 <script>
-import { where, orderBy } from 'firebase/firestore';
+import {where, orderBy} from 'firebase/firestore';
 import FirestoreService from '@/services/FirestoreService.js';
-import { useUserStore } from '@/store/UserStore.js';
-import Constants from '@/Constants.js';
+import {useUserStore} from '@/store/UserStore.js';
+import Constants from '/src/constants.js';
 
 export default {
   name: 'CommentsComponent',
@@ -83,7 +104,7 @@ export default {
       user: null,
       userNicknames: {},
       userAvatars: {},
-      userAvatar: '',
+      userAvatar: 'favicon.ico',
     };
   },
   computed: {
@@ -99,6 +120,10 @@ export default {
           user_id: this.user.uid,
           movie_id: this.movieId,
           timestamp: new Date(),
+          likes: 0,
+          dislikes: 0,
+          likedBy: [],
+          dislikedBy: [],
         });
         this.newComment = '';
       }
@@ -111,18 +136,45 @@ export default {
         alert('Вы не можете удалить этот комментарий.');
       }
     },
+    async likeComment(comment) {
+      if (this.user && !comment.likedBy.includes(this.user.uid)) {
+        await FirestoreService.updateDocument(Constants.COLLECTION_COMMENTS, comment.id, {
+          likes: comment.likes + 1,
+          likedBy: [...comment.likedBy, this.user.uid],
+        });
+        if (comment.dislikedBy.includes(this.user.uid)) {
+          await FirestoreService.updateDocument(Constants.COLLECTION_COMMENTS, comment.id, {
+            dislikes: comment.dislikes - 1,
+            dislikedBy: comment.dislikedBy.filter(uid => uid !== this.user.uid),
+          });
+        }
+      }
+    },
+    async dislikeComment(comment) {
+      if (this.user && !comment.dislikedBy.includes(this.user.uid)) {
+        await FirestoreService.updateDocument(Constants.COLLECTION_COMMENTS, comment.id, {
+          dislikes: comment.dislikes + 1,
+          dislikedBy: [...comment.dislikedBy, this.user.uid],
+        });
+        if (comment.likedBy.includes(this.user.uid)) {
+          await FirestoreService.updateDocument(Constants.COLLECTION_COMMENTS, comment.id, {
+            likes: comment.likes - 1,
+            likedBy: comment.likedBy.filter(uid => uid !== this.user.uid),
+          });
+        }
+      }
+    },
     async fetchUserData(userId) {
       if (this.userNicknames[userId] && this.userAvatars[userId]) {
         return {
           nickname: this.userNicknames[userId],
-          avatarUrl: this.userAvatars[userId]
+          avatarUrl: this.userAvatars[userId] || 'favicon.ico',
         };
       }
 
       const userDoc = await FirestoreService.getDocument(Constants.COLLECTION_USERS, userId);
       const nickname = userDoc ? userDoc.nickname : 'Аноним';
-      const avatarUrl = userDoc ? userDoc.avatar_url : null;
-
+      const avatarUrl = userDoc ? userDoc.avatar_url : 'favicon.ico';
       this.userNicknames[userId] = nickname;
       this.userAvatars[userId] = avatarUrl;
 
@@ -144,7 +196,7 @@ export default {
             this.comments = await Promise.all(
                 snapshot.docs.map(async (doc) => {
                   const data = doc.data();
-                  const { nickname, avatarUrl } = await this.fetchUserData(data.user_id);
+                  const {nickname, avatarUrl} = await this.fetchUserData(data.user_id);
                   return {
                     id: doc.id,
                     nickname,
@@ -159,7 +211,7 @@ export default {
     async loadCurrentUserAvatar() {
       if (this.user) {
         const userDoc = await FirestoreService.getDocument(Constants.COLLECTION_USERS, this.user.uid);
-        this.userAvatar = userDoc ? userDoc.avatar_url || 'https://cdn.vuetifyjs.com/images/profiles/1.png' : 'https://cdn.vuetifyjs.com/images/profiles/1.png';
+        this.userAvatar =  userDoc.avatar_url;
       }
     }
   },

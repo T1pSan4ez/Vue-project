@@ -8,15 +8,17 @@
           class="cursor-style"
           @click="goToMovieDetails(card.id)"
       ></v-img>
-      <v-card-title class="cursor-style" @click="goToMovieDetails(card.id)">{{ card.title }}</v-card-title>
-      <v-card-subtitle class="mb-3"><strong>{{ card.original_title }}</strong></v-card-subtitle>
-      <v-card-subtitle class="mb-3">
-        {{ card.release_date }},
+      <v-card-title class="cursor-style" @click="goToMovieDetails(card.id)">{{ card.name }}</v-card-title>
+      <v-card-subtitle class="mb-3"><strong>{{ card.original_name }}</strong></v-card-subtitle>
+      <v-card-subtitle class="mb-3" v-month-name v-if="card.first_air_date">
+        {{ card.first_air_date }}
+      </v-card-subtitle>
+      <v-card-subtitle v-if="card.vote_average" class="mb-3">
         <span>Рейтинг: </span>
         <span :class="getRatingClass(card.vote_average)">{{ formatRating(card.vote_average) }}</span>
       </v-card-subtitle>
       <div class="button-container">
-        <v-btn v-if="isUserLoggedIn && !isFavorite" color="primary" @click="addToFavorites('favorites', { user_id: user.uid, movie_id: card.id, title: card.title })">Добавить в избранное</v-btn>
+        <v-btn v-if="isUserLoggedIn && !isFavorite" color="primary" @click="addToFavorites('tv_favorites', { user_id: user.uid, tv_show_id: card.id, title: card.name })">Добавить в избранное</v-btn>
         <v-btn v-if="isUserLoggedIn && isFavorite" color="primary" disabled>В избранном</v-btn>
       </div>
     </v-card>
@@ -26,15 +28,19 @@
 <script>
 import { FavoriteMixin } from "@/mixins/FavoriteMixin.js";
 import { RatingMixin } from "@/mixins/RatingMixin.js";
-import Constants from "@/Constants.js";
+import Constants from "@/constants.js";
+import monthNameDirective from "@/directives/monthNameDirective.js";
 
 export default {
-  name: "PopularComponent",
+  name: "TvComponent",
   props: {
     card: {
       type: Object,
       required: true,
     },
+  },
+  directives: {
+    monthName: monthNameDirective,
   },
   mixins: [FavoriteMixin, RatingMixin],
   computed: {
@@ -44,12 +50,12 @@ export default {
   },
   methods: {
     goToMovieDetails(id) {
-      this.$router.push({ name: 'solo-card', params: { id } });
+      this.$router.push({ name: 'tv-card', params: { id } });
     },
   },
   mounted() {
     if (this.user) {
-      this.checkIfFavorite(Constants.COLLECTION_FAVORITES, Constants.FIELD_MOVIE_ID, this.card.id);
+      this.checkIfFavorite(Constants.COLLECTION_TV_FAVORITES, Constants.FIELD_TV_SHOW_ID, this.card.id);
     }
   },
 };
@@ -65,7 +71,7 @@ export default {
 }
 
 .red-text {
-  color: orangered;
+  color: red;
 }
 
 .cursor-style {

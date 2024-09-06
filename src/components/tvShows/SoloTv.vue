@@ -2,22 +2,22 @@
   <div>
     <v-container class="width-container">
       <v-row>
-        <v-col cols="4">
+        <v-col cols="8">
           <h2>{{ tvInfo.name }}</h2>
           <p>{{ tvInfo.original_name }}</p>
         </v-col>
       </v-row>
       <v-row>
         <v-col cols="12" md="4">
-          <v-img :src="getPosterUrl(tvInfo.poster_path)"></v-img>
+          <v-img :src="tvInfo.poster_path ? getPosterUrl(tvInfo.poster_path) : '/public/imagenotfound.png'"></v-img>
         </v-col>
         <v-col cols="12" md="8">
           <div class="about-movie">
             <p v-if="tvInfo.vote_average"><strong class="underline">Рейтинг IMDB:</strong><span
                 :class="getRatingClass(tvInfo.vote_average)"> {{ tvInfo.vote_average }}</span>
               ({{ tvInfo.vote_count }})</p>
-            <p v-if="tvInfo.first_air_date"><strong class="underline">Дата выхода первого эпизода:</strong>
-              {{ tvInfo.first_air_date }}</p>
+            <p v-if="tvInfo.first_air_date"><strong class="underline">Дата выхода первого эпизода: </strong>
+             <span v-month-name>{{ tvInfo.first_air_date }}</span> </p>
             <p v-if="productionCountries.length > 0"><strong class="underline">Страна:</strong>
               {{ getCountryName(productionCountries) }}</p>
             <p v-if="productionCompanies.length > 0"><strong class="underline">Производство:</strong>
@@ -131,15 +131,19 @@
 import Api from "@/services/api.js";
 import { RatingMixin } from "@/mixins/RatingMixin.js";
 import { FavoriteMixin } from "@/mixins/FavoriteMixin.js";
-import CommentsComponent from "@/components/CommentsComponent.vue";
-import RatingComponent from "@/components/RatingComponent.vue";
-import Constants from "@/Constants.js";
+import CommentsComponent from "@/components/movieFunctional/CommentsComponent.vue";
+import RatingComponent from "@/components/movieFunctional/RatingComponent.vue";
+import Constants from "@/constants.js";
+import monthNameDirective from "@/directives/monthNameDirective.js";
 
 export default {
   name: "SoloTv",
   components: {
     RatingComponent,
     CommentsComponent
+  },
+  directives: {
+    monthName: monthNameDirective,
   },
   mixins: [RatingMixin, FavoriteMixin],
   props: {
@@ -167,6 +171,7 @@ export default {
   methods: {
     async getInfo() {
       const response = await Api.getTvShowDetails(this.id);
+      console.log(response);
       this.tvInfo = response;
       console.log(this.tvInfo);
       this.genresInfo = response.genres;
